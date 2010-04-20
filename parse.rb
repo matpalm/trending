@@ -1,4 +1,11 @@
+require 'date'
 
+BASELINE = DateTime.parse 'Mon Jan 25 10:22:59 +0000 2010'
+def days_since_base_line datetime
+  datetime - BASELINE
+end
+
+=begin
 class String
   def terms
     self.downcase.gsub("'",'').gsub(/[^a-z0-9#_]/,' ').gsub("/n",' ').split.select {|t| t.length>3}
@@ -14,13 +21,12 @@ def daily_timeslot_for time, min_chunk=15
   minutes_since_midnight = time.hour * 60 + time.min
   minutes_since_midnight / min_chunk
 end
+=end
 
 def for_each_post_from_stdin
   STDIN.each do |record|
-    next if record =~ /^messageID/
-    cols = record.strip.split("\t")
-    time_s, subject, post = [10,6,7].collect { |i| cols[i] }
-    yield Time.at(time_s.to_i/1000), subject, post 
+    datetime, tweet = record.strip.split("\t")      
+    yield DateTime.parse(datetime), tweet
   end
 end
 

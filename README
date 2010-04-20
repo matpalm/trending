@@ -1,8 +1,32 @@
 trying out some simple trending algorithms
 
---- for 200k msgs
+site
+ - what does trending mean; frequency of event in some time period outside normal
 
-bash> 
+-- the data
+tweets about cheese for a period 20100125_2010022; 
+436e3 entries / 27days
+=> 16e3 a day
+
+extract tweet text (these gzips are full of partial records thus thou shalt redirect json parsing to dev null)
+bash> zcat /data/twitter/gardenhose/cheese.*.json.gz | ./tweet_text.rb 2>/dev/null > cheese_tweets.tsv
+
+first of all how many tweets per hour over this time?
+bash> cat cheese_tweets.tsv | ./tweets_per_hour_since_baseline.rb| sort -n | uarlws.sh > tweets_per_hour_since_baseline.tsv
+
+# todo
+
+approaches
+- is there enough variance to bother comparing to this time yesterday / last week 
+- mean of value +/- 2 stddevs...
+ 
+simple version first
+ - build model based on a range of data, say 20 chunks
+ - compare new chunk to mean +/- 2 std dev from chunks
+ 
+ - how to calculate mean/stddev in pig?
+ - do in ruby first to ensure we know what we're doing first...
+ 
 
 R> data = read.delim('occurances.that.tsv', header=FALSE)
 R> freqs = data[order(data$V2),]$V1
