@@ -1,0 +1,17 @@
+trying out some simple trending algorithms
+
+--- for 200k msgs
+
+bash> 
+
+R> data = read.delim('occurances.that.tsv', header=FALSE)
+R> freqs = data[order(data$V2),]$V1
+R> require(splines)
+
+R> plot(freqs)
+
+R> lines(predict(interpSpline(1:length(freqs), freqs)))
+or
+R> lines(spline(1:length(freqs),freqs, method='n', n=20))
+or
+R> lines(spline(1:length(freqs),freqs, method='n'))
