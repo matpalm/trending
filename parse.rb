@@ -1,27 +1,26 @@
 require 'date'
+require 'sanitise'
 
 BASELINE = DateTime.parse 'Mon Jan 25 10:22:59 +0000 2010'
 def days_since_base_line datetime
   datetime - BASELINE
 end
 
-=begin
 class String
   def terms
-    self.downcase.gsub("'",'').gsub(/[^a-z0-9#_]/,' ').gsub("/n",' ').split.select {|t| t.length>3}
+    self.sanitise.select {|t| t.length>3}
   end
 end
 
-def weekly_timeslot_for time, min_chunk=60
+def weekly_timeslot_for time, min_bucket_size
   minutes_since_start_of_week = time.wday * 24 * 60 + time.hour * 60 + time.min
-  minutes_since_start_of_week / min_chunk
+  minutes_since_start_of_week / min_bucket_size
 end
 
-def daily_timeslot_for time, min_chunk=15
+def daily_timeslot_for time, min_bucket_size
   minutes_since_midnight = time.hour * 60 + time.min
-  minutes_since_midnight / min_chunk
+  minutes_since_midnight / min_bucket_size
 end
-=end
 
 def for_each_post_from_stdin
   STDIN.each do |record|

@@ -1,9 +1,16 @@
 trying out some simple trending algorithms
+(SERIOUS WORK IN PROGRESS)
 
-site
- - what does trending mean; frequency of event in some time period outside normal
+
+
+---- blog notes
+
+-- what does it mean
+
+what does trending mean; the frequency of event in some time period outside normal
 
 -- the data
+
 tweets about cheese for a period 20100125_2010022; 
 436e3 entries / 27days
 => 16e3 a day
@@ -11,8 +18,45 @@ tweets about cheese for a period 20100125_2010022;
 extract tweet text (these gzips are full of partial records thus thou shalt redirect json parsing to dev null)
 bash> zcat /data/twitter/gardenhose/cheese.*.json.gz | ./tweet_text.rb 2>/dev/null > cheese_tweets.tsv
 
-first of all how many tweets per hour over this time?
-bash> cat cheese_tweets.tsv | ./tweets_per_hour_since_baseline.rb| sort -n | uarlws.sh > tweets_per_hour_since_baseline.tsv
+first of all how many tweets per hour over this time? (678 entries)
+bash> cat cheese_tweets.tsv | ./tweets_per_hour_since_baseline.rb | ./freq.sh > tweets_per_hour_since_baseline.tsv
+img tweets_per_hour_since_baseline.png
+
+what trending can we do on this timeseries?
+how do we decide give a new value whether it respresents a trend?
+
+1. mean and std dev
+
+one simple way is compare the value to the historical mean. to make the comparison robust to 
+normal flucuenation we compare to mean +/- 
+img tweets_per_hour_since_baseline.trend_limits.png
+
+TODO a moving average version of this to see how it stabilises
+
+how does this look per 15 min over the day?
+bash> cat cheese_tweets.tsv | ./tweets_over_day.rb 15 | ./freq.sh > tweets_over_day.15.tsv
+img tweets_over_day.15.png
+
+how does this look per hour over a week?
+bash> cat cheese_tweets.tsv | ./tweets_over_week.rb | ./freq.sh > tweets_over_week.1.tsv
+img tweets_over_week.1.png
+
+TODO
+
+2. mean and std dev; compared to this time in previous days
+
+split the sample up and instead compare not to the overall sample set but only
+compare to the samples from this time on previous days
+
+how can we notice when whether the direction has changed? is this stable?
+
+how does this relate to the daily nature of the data? ie compare to same time a day ago?
+
+how does this relate to the week nature of the data? ie compare to same time a week ago?
+
+how do we do this per term?
+
+how do we do this in pig?
 
 # todo
 
@@ -21,9 +65,8 @@ approaches
 - mean of value +/- 2 stddevs...
  
 simple version first
- - build model based on a range of data, say 20 chunks
+ - build model based on a range of data, say last 20 chunks
  - compare new chunk to mean +/- 2 std dev from chunks
- 
  - how to calculate mean/stddev in pig?
  - do in ruby first to ensure we know what we're doing first...
  
