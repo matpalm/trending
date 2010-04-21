@@ -45,10 +45,6 @@ entries = []
 STDIN.each do |record|
   freq, time = record.split
   entries << freq.to_i
+  puts [time, freq, entries.mean, entries.min_trending_value].join("\t")
 end
-
-
-train = entries.slice!(0,600)
-test = entries
-puts "train size=#{train.size} min=#{train.min} max=#{train.max} mean=#{train.mean} sd=#{train.sd} range_max=#{train.min_trending_value}"
 
