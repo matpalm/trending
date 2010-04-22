@@ -8,7 +8,7 @@ end
 
 class String
   def terms
-    self.sanitise.select {|t| t.length>3}
+    self.sanitise.split.select {|t| t.length>3}
   end
 end
 

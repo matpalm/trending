@@ -7,7 +7,6 @@ zcat /data/twitter/gardenhose/cheese.*.json.gz | ./tweet_text.rb 2>/dev/null > c
 cat cheese_tweets.tsv | ./tweets_over_day.rb 60 | uniq -c | ./clean_whitepage.sh > tweets_over_day.60.nonaggregated
 cat tweets_over_day.60.nonaggregated | ./trending.rb > tweets_over_day.60.trending.tsv
 
-
 # tweets over day, 15m chunks, with trending
 cat cheese_tweets.tsv | ./tweets_over_day.rb 15 | sort -n | uniq -c | clean_whitespace.sh | ./trending.rb > tweets_over_day.15.tsv
 
