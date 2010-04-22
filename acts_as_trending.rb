@@ -1,4 +1,4 @@
-@@SLIDING_WINDOW = ARGV.length > 0 && ARGV.first == 'sliding' # OMG! OPTS PLZ
+@@SLIDING_WINDOW = ARGV.includes? 'sliding' 
 
 class Array
 
