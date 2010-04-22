@@ -1,3 +1,5 @@
+@@SLIDING_WINDOW = ARGV.length > 0 && ARGV.first == 'sliding' # OMG! OPTS PLZ
+
 class Array
 
   alias :old_append :<<
@@ -5,6 +7,7 @@ class Array
   def << e
     @mean = @sd = nil
     old_append e
+    shift if @@SLIDING_WINDOW && length > 10
   end
 
   def mean

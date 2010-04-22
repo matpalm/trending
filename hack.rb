@@ -1,5 +1,13 @@
 #!/usr/bin/env ruby
-require 'date'
+require 'acts_as_trending'
+
+x = []
+[3,4,5,6].each do |i|
+  x << i
+  puts x.inspect
+end
+
+exit 0
 
 BASELINE = DateTime.parse 'Mon Jan 25 10:22:59 +0000 2010'
 def days_since_base_line datetime
