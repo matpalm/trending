@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'acts_as_trending'
+require 'trend'
 
 x = []
 [3,4,5,6].each do |i|

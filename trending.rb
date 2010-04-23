@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-require 'acts_as_trending'
-entries = []
+require 'trend'
+entries = Trend.new
 STDIN.each do |record|
   freq, time = record.split
   entries << freq.to_i

@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'acts_as_trending'
+require 'trend'
 entries_per_timeslot = {}
 plot_idx = 0 # can't use timeslot directly this time
 STDIN.each do |record|
@@ -7,7 +7,7 @@ STDIN.each do |record|
 
   entries = entries_per_timeslot[timeslot]
   if entries.nil?
-    entries = []
+    entries = Trend.new
     entries_per_timeslot[timeslot] = entries
   end
 
