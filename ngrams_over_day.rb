@@ -4,13 +4,12 @@ NGRAM_SIZE, BUCKET_SIZE = ARGV.map(&:to_i)
 require 'parse'
 
 def emit tuple
-  puts ([@timeslot] + tuple).join("\t")
+  puts ([@timeslot_since_epoch] + tuple).join("\t")
 end
 
 for_each_post_from_stdin do |datetime, tweet| 
-
-  @timeslot = daily_timeslot_for(datetime, BUCKET_SIZE)
-
+  @timeslot_since_epoch = daily_timeslot_since_epoch_for(datetime, BUCKET_SIZE)
+  
   terms = tweet.terms
   next if terms.size < NGRAM_SIZE
 

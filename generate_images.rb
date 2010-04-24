@@ -73,9 +73,12 @@ EOF
 
 end
 
-#trending_graph_with_zoom_in_for 'tweets_over_day.60.trending'
-#trending_graph_with_zoom_in_for 'tweets_over_day.60.periodic_trending'
-#trending_graph_with_zoom_in_for 'tweets_over_day.60.periodic_trending.sliding'
+['tweets_over_day.60.trending','tweets_over_day.60.periodic_trending','tweets_over_day.60.periodic_trending.sliding'].each do |file|
+  trending_graph_with_zoom_in_for file
+end
+['grilledcheese', 'creamcheese', 'goatscheese', 'applejuice'].each do |ngram|
+  trending_graph "tweets_over_day.60.#{ngram}.trending", false
+end
 #tweets_over_day
 hi_low_over_day
 

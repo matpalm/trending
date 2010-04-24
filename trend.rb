@@ -15,6 +15,10 @@ class Trend < Array
     shift if @sliding_window && length > @sliding_window_length
   end
 
+  def oldest_value
+    first
+  end
+
   def mean
     @mean ||= lambda {
       inject(:+).to_f / size
@@ -31,7 +35,7 @@ class Trend < Array
   end
 
   def min_trending_value
-    mean + (2*sd)
+    mean + (3*sd)
   end
   
   def trend_value value

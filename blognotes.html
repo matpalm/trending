@@ -33,12 +33,9 @@ normal flucuenation we compare to mean +/- 2x std dev
 <img src="tweets_over_day.60.trending.png"/>
 <img src="tweets_over_day.60.trending.zoom.png"/>
 
+this gives us a model for the entire dataset; simplest
+
 2. mean and std dev; compared to this time in previous days
-
-slot 9 - low point
-slot 22 - high point
-
-<img src="tweets_over_day.60.hi_low_trending.png"/>
 
 makes each time series much smoother; but not as good at predicting the overall trend.
 perhaps this needs to be more than 2x the std dev??
@@ -54,7 +51,14 @@ to same time of day the data is quite stable.
 <img src="tweets_over_day.60.periodic_trending.sliding.png"/>
 <img src="tweets_over_day.60.periodic_trending.sliding.zoom.png"/>
 
-3. per terms; mean and std dev over entire set
+slot 9 - low point
+slot 22 - high point
+
+<img src="tweets_over_day.60.hi_low_trending.png"/>
+
+this gives us model per 1hr chunk of the day; works well for values which are 'trending' even though the values are on the downturn
+
+3. mean and std dev; per term
 
 break down in terms in 1/2/3 grams
 
@@ -62,13 +66,35 @@ break down in terms in 1/2/3 grams
 1.5e6 uniq 2grams; 75% of which are uniq
 3.1e6 uniq 3grams; 86% of which are uniq
 
-so for breaking down into 3grams for trending what cutoff do i need to 
-make? no need to calculate for those that have only appeared a few number
-of times...
+
+#4 22532 grilled cheese
+<img src="tweets_over_day.60.grilledcheese.trending.png"/>
+<!--<img src="tweets_over_day.60.grilledcheese.trending.zoom.png"/>-->
+
+#5 18639 cream cheese
+<img src="tweets_over_day.60.creamcheese.trending.png"/>
+<!--<img src="tweets_over_day.60.creamcheese.trending.zoom.png"/>-->
+
+#412 763 goats cheese
+<img src="tweets_over_day.60.goatscheese.trending.png"/>
+<!--<img src="tweets_over_day.60.goatscheese.trending.zoom.png"/>-->
+
+#1483 288 apple juice
+<img src="tweets_over_day.60.applejuice.trending.png"/>
+
+#1434274 1 bus number
+
+433534 -> 1589981 are all frequency 1
+
+how to allow smaller frequency trends to trump trends of larger frequency items?
+while not letting low values to blow everything up 
+ie a 'freq' of 5 (from trend value of 2)
+perhaps trend value = Math.log10(freq) * (freq/min_trend)
+
+TODO
 
 4. per term; mean and std dev comapred to this time previous days
 ------------------------------------
-
 
 how can we notice when whether the direction has changed? is this stable?
 
