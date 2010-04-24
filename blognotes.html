@@ -35,7 +35,11 @@ normal flucuenation we compare to mean +/- 2x std dev
 
 2. mean and std dev; compared to this time in previous days
 
-split the time series up into a time series per 15min chunk of the day
+slot 9 - low point
+slot 22 - high point
+
+<img src="tweets_over_day.60.hi_low_trending.png"/>
+
 makes each time series much smoother; but not as good at predicting the overall trend.
 perhaps this needs to be more than 2x the std dev??
 it's getting trends on the downways slope. this is ok (?)
@@ -55,8 +59,8 @@ to same time of day the data is quite stable.
 break down in terms in 1/2/3 grams
 
 250e3 uniq 1grams; 64% of which are uniq
-1.3e6 uniq 2grams; 75% of which are uniq
-2.1e6 uniq 3grams; 86% of which are uniq
+1.5e6 uniq 2grams; 75% of which are uniq
+3.1e6 uniq 3grams; 86% of which are uniq
 
 so for breaking down into 3grams for trending what cutoff do i need to 
 make? no need to calculate for those that have only appeared a few number
