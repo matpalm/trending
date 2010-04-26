@@ -1,5 +1,5 @@
 require 'date'
-require 'sanitise'
+require "#{File.dirname(__FILE__)}/sanitise.rb"
 
 BASELINE = DateTime.parse 'Mon Jan 25 10:22:59 +0000 2010'
 def days_since_base_line datetime

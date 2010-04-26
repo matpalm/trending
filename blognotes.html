@@ -267,7 +267,290 @@ seems fair enough..
 
 moving onto pig
 
+have a workable model in pig.
+after 50 timesteps (of 677) model is 5m with 174e3 entries
 
+wc -l trending.model.0*
+    0 trending.model.000
+    0 trending.model.001
+    0 trending.model.002
+    0 trending.model.003
+    0 trending.model.004
+    0 trending.model.005
+    0 trending.model.006
+    0 trending.model.007
+    0 trending.model.008
+    0 trending.model.009
+    0 trending.model.010
+    1 trending.model.011
+    0 trending.model.012
+    0 trending.model.013
+    1 trending.model.014
+    0 trending.model.015
+    0 trending.model.016
+    1 trending.model.017
+    5 trending.model.018
+    0 trending.model.019
+    2 trending.model.020
+    0 trending.model.021
+    0 trending.model.022
+    0 trending.model.023
+    1 trending.model.024
+    3 trending.model.025
+    1 trending.model.026
+    4 trending.model.027
+    7 trending.model.028
+    8 trending.model.029
+   21 trending.model.030
+   12 trending.model.031
+   26 trending.model.032
+    8 trending.model.033
+   30 trending.model.034
+   32 trending.model.035
+   31 trending.model.036
+    3 trending.model.037
+    3 trending.model.038
+   39 trending.model.039
+   17 trending.model.040
+   21 trending.model.041
+   14 trending.model.042
+   17 trending.model.043
+    4 trending.model.044
+    5 trending.model.045
+    1 trending.model.046
+    2 trending.model.047
+    2 trending.model.048
+    0 trending.model.049
+    6 trending.model.050
+
+lets consider some cases...
+
+
+------------------------------
+trending.model.011
+
+mat@ubishop:~/dev/trending/pig$ cat trending.model.011
+2GRAM		min_trend_value		percent_over_trend	normalised_trend_value
+to make		56.3931315134716	1.0107613900884973	1.774770509940967
+
+mat@ubishop:~/dev/trending/pig$ grep to\ make chunks/011
+11 brian winnipeg manitoba ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 rick redondo beach ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 peter florissant mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 roel austin tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 grace andover ma us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 kaj san francisco ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 greg dallas tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 jane cincinnati oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 sherron new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 jim toronto ontario ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 megan solebury pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 stan kennett square pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 paul granite city il us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 klein eden delft nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 bob & pat albion in us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 kees goirle nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 leslie has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 robin bay city tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 angela imperial ne us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 kevin san jose ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 lynne north olmsted oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 rick cochrane alberta ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 adele new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 jennifer kingston mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 christian lauterach at has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 tami petersburg va us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 gretchen kingwood tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 tanya has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 david fulton mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 martha atascadero ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 ton amsterdam centrum nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+11 kashi has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make chee
+
+some interesting observations...
+
+1) pretty much any of 'has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese' could have been trending
+but i guess only 'to make' was the only 2gram that had been seen before and allowed the trend to be exposed.
+
+TODO: how to bake this into the algo? to allow all these to have been exposed in first hit?
+
+------------------------------
+trending.model.014
+
+mat@ubishop:~/dev/trending/pig$ cat trending.model.014
+for dinner			22.82414406334091	1.0077048206570665	1.3722197047778435
+
+mat@ubishop:~/dev/trending/pig$ grep for\ dinner chunks/014 | uniq -c | sort -n
+      1 14			back from the grocery i wasnt in to it i was thinking soup & grilled cheese for dinner before i went & that is still on the menu now
+      1 14			bad mood mac and cheese for dinner too you say dont mind if i do
+      1 14			broccoli cheese soup for dinner
+      1 14			cheese fries for dinner d about to finish a science foldable p social studies quiz was easyyy today s s is pretty easy for me
+      1 14			crap just realized that i didnt get anything out of the freezer for dinner too tired to shop so the kids are gonna eat mac & cheese
+      1 14			had cheese burger mac for dinner now about to have a fresh baked brownie for dessert yum o
+      1 14			im making mac and cheese for dinner im going to eat the whole damn box
+      1 14			i want a regular slice and beef patty w cheese for dinner but instead im having tomato soup hardbody miami
+      1 14			jenkfoster picked up some fresh spinach goganzola cheese ravioli at the turnip truck its whats for dinner yum yum enjoy
+      1 14			just had some macaroni and cheese with hot dogs for dinner it took me back to the good old days of elementary school
+      1 14			made ham cheese bread pudding for husband and little man for dinner i had my favorite spinach cranberry salad with seitan
+      1 14			making my mommas layered mac and cheese for dinner
+      1 14			mmm made my own greek salad for dinner i love feta cheese and kalamata olives
+      1 14			on my own for dinner cottage cheese raw cauliflower blue chips vanilla chai protien shake apple pasta shells and dried peas im odd
+      1 14			picked up some fresh spinach goganzola cheese ravioli at the turnip truck its whats for dinner
+      1 14			picked up some fresh spinach gorganzola cheese ravioli at the turnip truck its whats for dinner
+      1 14			rt jenkfoster picked up some fresh spinach goganzola cheese ravioli at the turnip truck its whats for dinner drooling now
+      1 14			rt jenkfoster picked up some fresh spinach goganzola cheese ravioli at the turnip truck its whats for dinner i thought it was beef
+      1 14			rt jenkfoster picked up some fresh spinach goganzola cheese ravioli at the turnip truck its whats for dinner that sounds so good
+      1 14			steamed cauliflower strawberries melon cottage cheese and crackers for dinner yup diet starts today haha
+      1 14			tilapia collard greens and mac n cheese for dinner yumm
+      1 14			uhf weight lifting has killed me tonight in retaliation i will eat cheese and crackers for dinner and drink beer muwahaha d
+      1 14			windows and cheese for dinner
+
+awesome! a legit trend! these must have all been tweeted about the same time, must have been dinner time in the states :P
+
+------------------------------
+trending.model.017
+
+mat@ubishop:~/dev/trending/pig$ cat trending.model.017
+is the				25.098598609851667	1.1554429970690459	1.689717525600142
+
+mat@ubishop:~/dev/trending/pig$ grep is\ the chunks/017 | sort -n | uniq -c
+      1 17	alright who is the wise guy that took a cheese grater to cole aldrichs face to make him look so ugly kusucks
+      1 17	brianezell why is there something other than meat and cheese on there
+      1 17	chocolate chip cheese cake is the best
+      1 17	crystalklyre ooo sounds yummy this is the first time anyoine has said mac n cheese n i didnt crave it somethings wrong lol
+      1 17	dabaddest yuuup u mad girl d red pack is the bess ever hmmm crix cheese n some milo heaven
+      1 17	he is the mouse messiah and he will lead the other mice to the promised land of cheese and peanut butter i have fun in pet stores
+      1 17	iamdomo is there cheese lol
+      1 17	is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      1 17	jpolittevt umm so is the steak with creamy blue cheese sauce definitely worth the money love rays the steaks
+      1 17	kevinbhealey i think the whole proverb is the early bird gets the worm but its the second mouse who gets the cheese
+      1 17	matthardybrand tell me you didn t make the rookie mistake of ordering a bowl of skyline a 3 way and 2 cheese coneys is the way to go
+      1 17	nope rt 3carryonitems rodimusprime arent you glad cheese eyes is the gm
+      1 17	omg this cheese roll & lemon pepper chicken is the biz right now
+      1 17	the only thing that i would have changed is the size i made them too big very tasty little devils sharp cheddar cheese bacon and more
+      1 17	what the hell is feta cheese this is the grossest salad ever
+      7 17	littlecbeadles is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      9 17	justinbieber is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+
+annoying. these are all from the same person in the same time slot
+
+TODO: consider uniq out to disallow a single person from influencing the trends
+
+------------------------------
+trending.model.018
+
+
+------------------------------
+trending.model.030
+
+2GRAM		min_trend_value		percent_over_trend	normalised_trend_value
+philly cheese	21.571632449445843	1.3443581549965165	1.9659866743260401
+its a  		10.854729900543033	1.2897603282878203	1.4782304715562389
+to be  		16.981585031646752	1.11885904434667	1.430745031916945
+a little	12.411592798473762	1.2085475445056924	1.4213622032463518
+&lt &lt		11.111708783651487	1.079941909353802	1.1654530553954874
+turkey and	8.815978720962939	1.1343040082687195	1.1343040082687195
+feta cheese	10.207220411803762	1.0776685087822202	1.1222761020711767
+did you		9.197294363825087	1.087276279786382	1.087276279786382
+live in		10.999999999549999	1.0000000000409093	1.0413926852008277
+having a	6.058184976694733	1.155461582458829	0.9764783186477279
+
+lets consider the top trending... 'philly cheese'
+mat@ubishop:~/dev/trending/pig$ grep philly\ cheese chunks/030|sort|uniq -c |sort -n
+      1 30			channingtatum i love philly cheese steaks i live in philly love youu &lt 3
+      1 30			channingtatum philly cheese steaks are amazing just like you
+      1 30			channingtatum waiting to watch on talk philly genos philly cheese the best
+      1 30			channingtatum wish i was there would gladly buy you a philly cheese steak have fun lookin forward to feb 5th
+      1 30			djprostyle a philly cheese steak
+      1 30			eating a swell philly cheese
+      1 30			enjoy bb rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak
+      1 30			ill feed you rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak
+      1 30			oooo the cafe got philly cheese steaks
+      1 30			philly cheese fried chciken and roast beef and mash today awesome
+      1 30			philly cheese steak in philly
+      1 30			todays lunch specials grilled hawaiian chicken 6 95 or philly cheese steak w fries 5 95 both come with free soft drinks
+      1 30			vegan night at now thats class 9pm philly cheesesteaks mac & cheese potato salad 9 gets you everything and they give you utensils
+      1 30			yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak ballin
+      5 30			channingtatum i love philly cheese steaks i live in philly love youu
+      5 30			channingtatum i love philly cheese steaks i live in philly love youu pleasse rt and follow
+      6 30			rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak ballin
+
+looks like a legit trend. channingtatum is an actor, who must have been talking about philly cheese (i guess?)
+
+TODO: have lost information required to display a little trend graph, how could we store these frequencies? especially since we only record and check ngrams that are present in chunk...
+
+lets consider the second trending... 'its a'
+mat@ubishop:~/dev/trending/pig$ grep its\ a chunks/030|sort|uniq -c |sort -n
+      1 30			all this talk of biscuits is making me want biscuits and all we have is cheese and cheesecake
+      1 30			ciaojaibella its a turkey breast sandwich w avocado provolone cheese cucumber sprouts lettuce & tomato charlie 330 you got me
+      1 30			confusing 2 get an invite 2 a party 2 only find out later its a sale w wine & cheese should b upfront abt this first
+      1 30			enjoy bb rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak
+      1 30			grits all white grits hot butter grits yellow cheese grits salt n pepper grits in dis bish hit the microwave finna make these grits
+      1 30			ham and cheese on the w&od its a little chilly but decent cheers to the folks at spokes on the free repair
+      1 30			ill feed you rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak
+      1 30			im becoming a foodie its an obsession i will be attempting cheese cake this week
+      1 30			is in da cafe but i dnt eat pork no more its a cheese n chips ting lol
+      1 30			its almost lunch time ive got the grilled cheese all lined up ready to be cooked
+      1 30			made spongebob mac and cheese and listening to see the light its a great morning and god is awesome
+      1 30			penne arrabiata garlic bread with parmesan cheese success my first time and its always good when it turns out great sweet dreams
+      1 30			southern style fried haddock served with homemade cheese grits and hushpuppies 9
+      1 30			tristanreveur its all about the macaroni and cheese pizza yum
+      1 30			yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak ballin
+      6 30			rt channingtatum yo tweeters in philly doing press for dear john its a little cold but three words philly cheese steak ballin
+
+TODO: basically the same tweet; how can we colate this? what is of actual interest?
+
+
+
+considering the next 
+
+the case of the macdonalds cheese 
+
+mat@ubishop:~/dev/trending/pig$ grep of\ cheese chunks/035
+  35 if you have to ask what kind the answer is velveeta rt drewcurtis alright subject change what kind of cheese
+  35 rt bbcworld a dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese o
+  35 so bloody hungry off to make cheesy pasta with lots of cheese and bacon and probably peas gingemybells favourite food
+  35 rt bbcworld a dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese on a burge
+  35 rt hallieangelella just ate an entire bag of cheese balls again i should not be allowed to buy these
+  35 mcdonalds profits jump by 23 its all in a slice of cheese
+  35 ewwwwwwwwwwwwwwwwwwwwwww my sister just came in stinking of cheese and onion now my room smells grosss hate cheese &onion its rank
+  35 court to mcds its wrong to fire someone over a slice of cheese
+  35 omgitsfresh one thing of ground beef uh 1thing of cheese and 2cans of enchalada sauce if you olives buy a can of those too
+  35 gabrielisgray what do you put in them i prefer a couple different types of cheese and a zingy tomato sauce on top
+  35 bbcworld dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese on a burge
+  35 fired for a slice of cheese im not lovin it at all idiocy
+  35 a mcdonalds in the netherlands fired a lady over a extra peice of cheese smdh
+  35 mcdonalds lose case against worker who put cheese in hamburger its just a slice of cheese lol
+  35 a dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese via bbcworld fb
+  35 mcdonalds reports 24 increase in quarterly profits fires employee for giving away a slice of cheese
+  35 mantia ah but what kind of cheese
+  35 guys guys they will have multiple flavors of cheese so one of you can get pepperjack and the other can get cheddar dont worry
+  35 breaking it is just a slice of cheese lol rt bbcnews dutch branch of mcdonalds was wrong to fire an employee
+  35 court to mcdonalds its wrong to fire someone over a slice of cheese one for the workers suck it mcds
+  35 rt hawt kommodity random factaboutme when im bored i eat slices of cheese by itself &lt &lt i thought i was only one
+  35 court rules dutch mcdonalds outlet was wrong to sack employee for giving a colleague a piece of cheese on a hamburger
+  35 its only a slice of cheese
+  35 brad s speaking of cheese i love their cheese sauce also yes it seem that people still do i always use the persons name that im with
+  35 nom nom nom the prospect of cheese on toast evidently makes me hyper l
+  35 it is just a slice of cheese
+  35 depressing internet failure of the day searching for a monkey made out of cheese doesnt yield any pics of a monkey made out of cheese
+  35 court to mcds its wrong to fire someone over a slice of cheese via consumerist
+  35 lunching at the grilled cheese truck with the mayor of cheese
+  35 rt bbcnews a dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese on
+  35 theft is theft to me court to mcds its wrong to fire someone over a slice of cheese vrt consumerist buzzedition
+  35 rt buzzedition court to mcds its wrong to fire someone over a slice of cheese via consumerist a for effort
+  35 court to mcds its wrong to fire someone over a slice of cheese a mcdonalds worker from the nether consumerist
+  35 court to mcds its wrong to fire someone over a slice of cheese
+  35 court to mcds its wrong to fire someone over a slice of cheese
+  35 mcdonalds sacked worker over single cheese slice &lt &lt guys its just a piece of cheese
+  35 rt consumerist court to mcds its wrong to fire someone over a slice of cheese
+  35 pizza is really just a fancy version of cheese on toast
+  35 rach e with a spoon or did you mean how do you make them if so bung in the oven with a bit of cheese cream spinach theyre lovely
+  35 wisconsin fans smell of cheese and bratwurst and the men are worse
+  35 yesss rt anti prettyboi only thing you can ask me is how i want my samwiches i want more cheese lots and lots of cheese
+  35 fired over a slice of cheese whats next
+  35 rt bbcworld a dutch branch of mcdonalds was wrong to fire an employee for giving a colleague a piece of cheese on a burge
+  35 im so hungry i havent ate all day besides at lunch and all i had was a few pieces of chicken
 
 
 notes:

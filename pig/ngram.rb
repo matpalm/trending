@@ -1,13 +1,12 @@
 #!/usr/bin/env ruby
-NGRAM_SIZE = 3
+NGRAM_SIZE = 2
 
 def emit tuple
-  puts "#{@key}\t#{tuple.join(" ")}"
+  puts "#{tuple.join(" ")}"
 end
 
 STDIN.each do |record|
   key, text = record.split("\t")
-  @key = key
   
   terms = text.split
   next if terms.size < NGRAM_SIZE

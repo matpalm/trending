@@ -12,12 +12,14 @@ raw_model = load '$model_in' as (key:chararray, m:double, ms:double, sd:double, 
 model = foreach raw_model generate key, m, ms, sd, n, 0 as f;
 
 -- load next 1hr chunk, expect just keys in any order, without timestamps or anything
-next_block = load '$next_chunk' as (key:chararray);
-next_block_grouped = group next_block by key;
-next_block_freq = foreach next_block_grouped generate group as key, SIZE(next_block) as f;
+next_chunk = load '$next_chunk';
+define ngramer `ngram.rb` ship('ngram.rb');
+ngrams = stream next_chunk through ngramer as (key:chararray);
+ngrams_grouped = group ngrams by key;
+ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
 
 -- generate a seed list of keys from next block, we might not have seen some of these entries before
-seed_values = foreach next_block_freq generate key, 0.0 as m, 0.0 as ms, 0.0 as sd, 0 as n, f;
+seed_values = foreach ngram_freq generate key, 0.0 as m, 0.0 as ms, 0.0 as sd, 0 as n, f;
 
 -- inject these seed values into the model (seems clumsy but is there a better way?)
 -- especially clumsy is the reliance on MAX to get the correct values in each case. urgh.
