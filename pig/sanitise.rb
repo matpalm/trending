@@ -14,7 +14,7 @@ class String
   end
   
   def without_punctionation
-    gsub(/[\',]/,'').gsub(/[^a-z0-9&@]/, ' ')
+    gsub(/[\',]/,'').gsub(/[^a-z0-9@&]/, ' ')
   end
   
   def duplicate_spaces_removed
