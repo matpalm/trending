@@ -8,7 +8,7 @@ zcat /data/twitter/gardenhose/cheese.*.json.gz | tweet_text.rb 2>/dev/null > che
 
 # baseline; with and without trending lines
 # todo: don't need tweets_per_hour_since_baseline.tsv, can just use tweets_over_day 60 | uniq -c
-cat cheese_tweets.tsv | tweets_over_day.rb 60 | uniq -c | clean_whitespace.sh > tweets_over_day.60.nonaggregated
+cat cheese_tweets.tsv | tweets_over_day.rb 60 | uniq -c | clean_whitespace.sh > tweets_over_day.60.nonaggregated  # EXPENSIVE TO CALL!
 cat tweets_over_day.60.nonaggregated | trending.rb > tweets_over_day.60.trending.tsv
 
 # part 2; per part of day
@@ -27,8 +27,8 @@ cat tweets_over_day.60.nonaggregated | periodic_trending.rb sliding > tweets_ove
 
 # lo / hi point trends
 # slot 9 is roughly the lo point, 22 is roughtly the hi point
-cat tweets_over_day.60.nonaggregated | grep -P '\t9$' | periodic_trending.rb > tweets_over_day.60.lo.periodic_trending.tsv
-cat tweets_over_day.60.nonaggregated | grep -P '\t22$' | periodic_trending.rb > tweets_over_day.60.hi.periodic_trending.tsv
+#cat tweets_over_day.60.nonaggregated | grep -P '\t9$' | periodic_trending.rb > tweets_over_day.60.lo.periodic_trending.tsv
+#cat tweets_over_day.60.nonaggregated | grep -P '\t22$' | periodic_trending.rb > tweets_over_day.60.hi.periodic_trending.tsv
 
 # part 3; per 2 grams
 

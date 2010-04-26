@@ -213,55 +213,62 @@ while not letting low values to blow everything up
 ie a 'freq' of 5 (from trend value of 2)
 perhaps trend value = Math.log10(freq) * (freq/min_trend)
 
+ruby normalised_trend_values.rb > test.r
+R --vanilla < test.r
+
+cat normalised_trend_values.rb
 #!/usr/bin/env ruby
 ['grilledcheese','creamcheese','goatscheese','applejuice'].each do |term|
 puts <<EOF
   data = read.delim('tweets_over_day.60.#{term}.trending.tsv', header=FALSE)
-  over_trend = data$V2 / data$V4
-  normalised_trend = log10(data$V3) * over_trend
+  freq = data$V2
+  min_trending = data$V4  
+  over_trend = freq / min_trending
+  normalised_trend = log10(freq) * over_trend
   data2 = cbind(data, over_trend, normalised_trend)
   data2[data2$over_trend>1,]
 EOF
 end
 
-
 >   data = read.delim('tweets_over_day.60.grilledcheese.trending.tsv', header=FALSE)
      V1  V2       V3       V4 over_trend normalised_trend
-230 229 182 32.10435 103.0437   1.766241         2.660955
-366 366 179 32.71311 105.6309   1.694580         2.566817
-391 391 113 33.32481 107.9641   1.046645         1.593797
-392 392 109 33.51786 108.9364   1.000584         1.526167
+230 229 182 32.10435 103.0437   1.766241         3.991831
+366 366 179 32.71311 105.6309   1.694580         3.817639
+391 391 113 33.32481 107.9641   1.046645         2.148844
+392 392 109 33.51786 108.9364   1.000584         2.038617
 
 >   data = read.delim('tweets_over_day.60.creamcheese.trending.tsv', header=FALSE)
      V1  V2       V3       V4 over_trend normalised_trend
-221 220  79 25.90045 71.34388   1.107313         1.564973
-323 322  78 26.51084 73.97633   1.054391         1.500845
-364 363  81 26.93132 75.07515   1.078919         1.543132
-377 376 142 27.58886 79.66678   1.782424         2.567999
+221 220  79 25.90045 71.34388   1.107313         2.101267
+323 322  78 26.51084 73.97633   1.054391         1.995008
+364 363  81 26.93132 75.07515   1.078919         2.059101
+377 376 142 27.58886 79.66678   1.782424         3.836291
 
 >   data = read.delim('tweets_over_day.60.goatscheese.trending.tsv', header=FALSE)
      V1 V2       V3       V4 over_trend normalised_trend
-44   76  8 1.931818 6.193591   1.291658        0.3693705
-205 367  6 1.824390 5.340973   1.123391        0.2933373
-223 393  8 1.869955 5.580961   1.433445        0.3896551
-268 464  9 1.847015 5.605859   1.605463        0.4278084
-289 510 12 1.958478 6.221262   1.928869        0.5630727
-301 528  9 1.990033 6.428887   1.399931        0.4183839
-382 676  9 1.994764 6.379383   1.410795        0.4230855
+44   76  8 1.931818 6.193591   1.291658         1.166483
+205 367  6 1.824390 5.340973   1.123391         0.874168
+223 393  8 1.869955 5.580961   1.433445         1.294530
+268 464  9 1.847015 5.605859   1.605463         1.532001
+289 510 12 1.958478 6.221262   1.928869         2.081599
+301 528  9 1.990033 6.428887   1.399931         1.335874
+382 676  9 1.994764 6.379383   1.410795         1.346240
 
 >   data = read.delim('tweets_over_day.60.applejuice.trending.tsv', header=FALSE)
      V1 V2       V3       V4 over_trend normalised_trend
-13   69  2 1.076923 1.876331   1.065910       0.03430597
-14   75  4 1.285714 3.671899   1.089355       0.11889703
-117 390  4 1.333333 3.294495   1.214147       0.15169396
-205 654  4 1.351220 3.324714   1.203111       0.15727776
+13   69  2 1.076923 1.876331   1.065910        0.3208709
+14   75  4 1.285714 3.671899   1.089355        0.6558568
+117 390  4 1.333333 3.294495   1.214147        0.7309892
+205 654  4 1.351220 3.324714   1.203111        0.7243449
+
 
 seems fair enough..
 
 
-
-
 moving onto pig
+
+
+
 
 notes:
   remove records for cases with only a few records

@@ -44,15 +44,14 @@ describe 'trend streaming' do
   describe 'for multiple different items' do
     before do
       @trend = TrendStreaming.new
+      @trend << 2
       @trend << 3
-      @trend << 4
-      @trend << 5
     end
     it 'should calculate the mean' do
-      @trend.mean.should == 4
+      @trend.mean.should == 2.5
     end
     it 'should calculate the std dev' do    
-      @trend.std_dev.should == 1
+      @trend.std_dev.should be_close(0.70710, 0.001)
     end    
   end
 

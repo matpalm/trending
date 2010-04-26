@@ -81,6 +81,6 @@ end
   trending_graph "tweets_over_day.60.#{ngram}.withzerofill.trending", false
 end
 #tweets_over_day
-hi_low_over_day
+#hi_low_over_day
 
 

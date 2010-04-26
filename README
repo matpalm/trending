@@ -1,4 +1,5 @@
 trying out some simple trending algorithms
 (SERIOUS WORK IN PROGRESS)
 
-see blognotes.html
+see blognotes.html for the work in progress version of the project pages
+see run.sh for the end to end script to build all the data for generating the prj page graphs

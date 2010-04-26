@@ -1,0 +1,7 @@
+to run ternding from ruby 
+bash> ruby 2gram_trends.test.rb
+
+to run trending from pig (wip)
+bash> gen_run_pig_version.rb > run_pig_version.sh
+bash> sh run_pig_version.sh
+

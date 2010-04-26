@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'trend'
+require "#{File.dirname(__FILE__)}/trend.rb"
 entries = Trend.new
 STDIN.each do |record|
   freq, time = record.split

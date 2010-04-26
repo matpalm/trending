@@ -2,3 +2,5 @@
 .Rhistory
 cheese_tweets.tsv
 xa*
+tweets_over_day.60.*.trending.tsv
+terms.[123]grams.freq

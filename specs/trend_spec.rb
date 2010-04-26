@@ -1,5 +1,17 @@
 require "#{File.dirname(__FILE__)}/../trend.rb"
 
+describe 'simple mean and std dev' do
+  before do
+    @trend = Trend.new([2,3])
+  end
+  it 'should know mean' do
+    @trend.mean.should == 2.5
+  end
+  it 'should know std dev' do
+    @trend.sd.should be_close(0.7071068, 0.00001)
+  end
+end
+
 describe 'trending without zero values' do
   before do
     @trend = Trend.new([1,2,1,2,3])
@@ -21,7 +33,7 @@ describe 'trending with zero values' do
   end
 
   it 'should cal min_trend value' do
-    @trend.min_trending_value.should == 3.0
+    @trend.min_trending_value.should be_close(3.18854, 0.01)
   end 
 end
 
@@ -32,7 +44,7 @@ describe 'trending adding values explicitly' do
   end
 
   it 'should behave the same' do
-    @trend.min_trending_value.should == 3.0
+    @trend.min_trending_value.should be_close(3.18854,0.01)
   end
 end
 
@@ -48,39 +60,9 @@ describe 'sliding window' do
       @trend.oldest_value.should == 3
       @trend << 6
       @trend.oldest_value.should == 4
-    en
+    end
   end
 end
 
-=begin
-describe 'adding values by index' do
 
-  describe 'with explicit zeros' do
-
-    before do 
-      @trend = Trend.new
-      [1,2,0,2,2].each_with_index { |e,idx| @trend.add_indexed e, idx }
-    end
-
-    it 'should behave the same' do
-      @trend.min_trending_value.should == 3.0
-    end
-
-  end
-
-  describe 'with explicit zeros' do
-
-    before do 
-      @trend = Trend.new
-      [1,2,0,2,2].each_with_index { |e,idx| @trend.add_indexed e, idx }
-    end
-
-    it 'should behave the same' do
-      @trend.min_trending_value.should == 3.0
-    end
-
-  end
-
-end
-=end
 
