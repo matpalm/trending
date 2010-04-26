@@ -1,14 +1,18 @@
+-- pig -x local -param model_in=model.00 -param model_out=model.01 -param next_chunk=2grams_over_day.test.part00 trending.pig
+
 -- load sqrt and log10 functions
 register /home/mat/dev/ec2/from_aws_elastic/piggybank.jar;
+-- register /home/hadoop/lib/pig/piggybank.jar;
 
 --TODO ngram stuff in this script too!
 
 -- load current model
-raw_model = load 'model' as (key:chararray, m:double, ms:double, sd:double, n:int);
+raw_model = load '$model_in' as (key:chararray, m:double, ms:double, sd:double, n:int);
+--test = load 's3://matpalm/test' as (n:int);
 model = foreach raw_model generate key, m, ms, sd, n, 0 as f;
 
 -- load next 1hr chunk, expect just keys in any order, without timestamps or anything
-next_block = load '$next_block_file' as (key:chararray);
+next_block = load '$next_chunk' as (key:chararray);
 next_block_grouped = group next_block by key;
 next_block_freq = foreach next_block_grouped generate group as key, SIZE(next_block) as f;
 
@@ -53,23 +57,24 @@ model_n1 = foreach model_n_05 {
 -- store this model for next time
 -- (includes freq but will be dropped by next load)
 to_store = union model_n1, not_to_update;
-store to_store into 'model_n1';
+store to_store into '$model_out';
 
 -- calculate trending scores
 calc_min_trending = foreach model_n1 {
 	min_trend_value = m + (3*sd);
 	generate key, f, min_trend_value as min_trend_value, f / min_trend_value as percent_over_trend;
 }
-store calc_min_trending into 'calc_min_trending';
+store calc_min_trending into 'calc_min_trending.$model_in';
 
 -- filter those with a positive trending percentage
 trending = filter calc_min_trending by percent_over_trend > 1;
 -- scale by log of frequency to get final score
 trending2 = foreach trending {
 	normalised_trend_value = org.apache.pig.piggybank.evaluation.math.LOG10(f) * percent_over_trend;
-	generate key, min_trend_value, percent_over_trend, normalised_trend_value;
+	generate key, min_trend_value, percent_over_trend, normalised_trend_value as ntv;
 }
-store trending2 into 'trending';
+trending_sorted = order trending2 by ntv desc;
+store trending_sorted into 'trending.$model_in';
 
 
 
