@@ -1,105 +1,8 @@
-<h3>trending topics</h3>
-
-what does it mean for a topic to be 'trending'? consider the following time series (430e3 tweets containing cheese collected over a month period bucketed into hourly timeslots)
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.nonaggregated.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.nonaggregated.png"/></a>
-
-.. without a formal definition we can just look at this and say that the series was trending where there was a spike just before time 600. as a start then let's just define a trend as a value in a time series that was greater than was 'expected'.
-
-<h3>how can we calculate trending?</h3>
-
-one really nice simple algorithm for detecting a trend is to say a value, v, is trending if v > mean + 3 * standard deviation of the data seen so far. (thanks <a href="http://www.twitter.com/peteskomoroch">@peteskomoroch</a> for the suggestion, works a treat)
-
-let's consider the same time series as before but this time with some overlaid data;
-<font color="green">green - the mean</font>
-<font color="red">red - minimum trend value ( = mean + 3 * std dev )</font>
-<font color="blue">blue - instances where the value > minimum trend value</font>
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.trending.png"/></a>
-
-here's a zoom in on the last 200 values 
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.trending.zoom.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.trending.zoom.png"/></a>
-
-this works surprisingly well, the mean gives a solid expectation of the value with the standard deviation covering the daily periodic nature of the data.
-
-it's not perfect though as this system _only_ ever allows a trend around the peaks of the cycle. 
-
-for example consider the troughs which have a frequency value around 250. if we had a value in one of those timeslot's that was 500, ie twice what was expected given that time of day, it would not be considered trending since the value has to be over 1500
-
-<h3>facet by hour</h3>
-
-one way to handle this is to not have a single time series but instead maintain 24 time series, one for each hour of the day.
+<h4>thinking in pig latin</h4>
 
 
-faceting in this way gives the following trending 
 
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.png"/></a>
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.zoom.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.zoom.png"/></a>
-
-and though this doesn't present any cases were there trends at a trough we can see it was prettttty close a number of times.
-
-<h3>facet by ngram</h3>
-
-how else can we facet?
-
-one other interesting way to facet, and the main purpose of this project, is to maintain a seperate time series for n-grams in the tweet.
-
-the top 10 2-grams in my dataset are...
-
-<table>
-<tr><td>freq</td><td>term1</td><td>term2</td></tr>
-<tr><td>44389</td><td>and</td><td>cheese</td></tr>
-<tr><td>33454</td><td>cheese</td><td>and</td></tr>
-<tr><td>22815</td><td>mac</td><td>cheese</td></tr>
-<tr><td>22532</td><td>grilled</td><td>cheese</td></tr>
-<tr><td>18639</td><td>cream</td><td>cheese</td></tr>
-<tr><td>15225</td><td>the</td><td>cheese</td></tr>
-<tr><td>13592</td><td>mac</td><td>and</td></tr>
-<tr><td>12967</td><td>chuck</td><td>cheese</td></tr>
-<tr><td>12598</td><td>of</td><td>cheese</td></tr>
-<tr><td>12296</td><td>cheese</td><td>on</td></tr>
-</table>
-
-let's look at the time series for a few of them.
-
-<h4>#4 grilled cheese</h4>
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.grilledcheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.grilledcheese.trending.png"/></a>
-
-we get an interesting result from the very first spike at around 225... poor fangirl <a href="http://www.twitter.com/rachelljonas">@rachelljonas</a> spent 10 minutes tweeting like crazy trying to get the attention of <a href="http://www.twitter.com/nickjonas">@nickjonas</a> (some popstar i've never heard of) and bumped up 'grilled cheese' for a single timeslot (here's <a href="http://www.matpalm.com/trending/rachelljonas.html">her attempt</a> to get his attention...)
-
-this raises an interesting point about spam, as is possibly my first pre processing data cleaning steps, potentially we don't want to count all the tweets from a user within a small enough time frame??
-
-the next spike at around 375 shows potentially my first true trending topic, a sudden increase in the discussion of making grilled cheese. <a href="http://www.matpalm.com/trending/grilled_cheese.html">the data</a> has no dups so looks like it was just grilled cheese time!
-
-<h4>#5 cream cheese</h4>
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.creamcheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.creamcheese.trending.png"/></a>
-
-one major spike at about 376, looking at <a href="http://www.matpalm.com/trending/cream_cheese.html">the data</a>. there might have been a competition being run relating to #gno #bagelfuls ? 
-
-<h4>#412 goats cheese</h4>
-
-nothing uber interesting with the 'goats cheese' time series but it does illustrate an interesting point. for all the examples we've looked at so far each timeslot of an hour has included as least one entry for the 2gram. by the time we're getting to the lower entries there are as many timeslots with a zero frequency as there are with non zero frequency.
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.withzerofill.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.withzerofill.trending.png"/></a>
-
-interestingly if you only consider the cases where the frequency values are non zero i think you get a better sense of where the values are trending.
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.trending.png"/></a>
-
-this also turns out to make things easier to process :)
-
-<h4>#1483 apple juice</h4>
-
-with 'apple juice', an even less frequent 2gram, the effect is even more noticable if you ignore the zero frequency cases.
-
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.withzerofill.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.withzerofill.trending.png"/></a>
-<a href="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.trending.png"/></a>
-
-so with two ways of faceting the data, either timeslots or ngrams, the next step is porting the algorithm to pig so we can run it at scale.
-
+NEXT POSTS!!!!!!!!!!!!!!!!!!
 
 
     0 trending.model.012
@@ -407,5 +310,22 @@ TODO
 4. per term; mean and std dev comapred to this time previous days
 
 
+
+retro
+
+went well
+ - prototype in ruby; develop in pig; deploy on ec2;
+ - thinking in a streaming way
+
+went poorly
+ - clumsy orchestration in pig
+ - ec2 emr doesnt support this idea of iterative successive pig jobs
+
+puzzle
+ - how little data cleaning can you get away with?
+ - are the data cleansing steps for this project worth the effort?
+
+actions
+ - port to piglet
  
 

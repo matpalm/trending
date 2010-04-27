@@ -2,12 +2,13 @@
 
 @width = 750
 @height = 250
+@output_path = 'site'
 
 def trending_graph file, title, with_zoom
   image_filename = "#{file}#{(with_zoom ? ".zoom" : "")}.png"
   puts <<EOF
 
-png("#{image_filename}", width = #{@width}, height = #{@height}, bg = "transparent")
+png("#{@output_path}/#{image_filename}", width = #{@width}, height = #{@height}, bg = "transparent")
 d = read.delim("#{file}.tsv", header=FALSE)
 EOF
 
@@ -38,7 +39,7 @@ end
 
 def other_graphs
 puts <<EOF
-png("tweets_over_day.60.nonaggregated.png", width=#{@width}, height=#{@height}, bg = "transparent")
+png("#{@output_path}/tweets_over_day.60.nonaggregated.png", width=#{@width}, height=#{@height}, bg = "transparent")
 d = read.delim('tweets_over_day.60.nonaggregated', header=FALSE)
 dd = d$V1
 plot(dd, type='l', lwd='2', ylim=c(0,max(dd)), xlab='hours', ylab='freq', main='a month of tweets about cheese')
@@ -49,7 +50,7 @@ end
 =begin
 def hi_low_over_day
 puts <<EOF
-png("tweets_over_day.60.hi_low_trending.png", width=#{@width}, height=#{@height}, bg = "transparent")
+png("#{@output_path}/tweets_over_day.60.hi_low_trending.png", width=#{@width}, height=#{@height}, bg = "transparent")
 
 lo_d = read.delim('tweets_over_day.60.lo.periodic_trending.tsv', header=FALSE)
 lo_freqs = lo_d$V2
