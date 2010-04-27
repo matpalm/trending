@@ -1,5 +1,5 @@
-#!/usr/bin/env ruby
-require 'trend'
+#!"usr/bin/env ruby
+require "#{File.dirname(__FILE__)}/trend.rb"
 
 x = []
 [3,4,5,6].each do |i|

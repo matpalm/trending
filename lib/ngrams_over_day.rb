@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 raise "usage: ./emit_ngrams.rb NGRAM_SIZE BUCKET_SIZE_IN_MINUTES" unless ARGV.length==2
 NGRAM_SIZE, BUCKET_SIZE = ARGV.map(&:to_i)
-require 'parse'
+require "#{File.dirname(__FILE__)}/parse.rb"
 
 def emit tuple
   puts ([@timeslot_since_epoch] + tuple).join("\t")

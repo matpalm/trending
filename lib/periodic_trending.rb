@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'trend'
+require "#{File.dirname(__FILE__)}/trend.rb"
 entries_per_timeslot = {}
 plot_idx = 0 # can't use timeslot directly this time
 STDIN.each do |record|
