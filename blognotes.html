@@ -1,288 +1,107 @@
-<pre>
- blog notes
+<h3>trending topics</h3>
 
--- what does it mean
+what does it mean for a topic to be 'trending'? consider the following time series (430e3 tweets containing cheese collected over a month period bucketed into hourly timeslots)
 
-what does trending mean; 
-- the frequency of event in some time period outside normal
-- c.f. outliers
-- two images; one of smooth trend up, one with salt and pepper noise
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.nonaggregated.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.nonaggregated.png"/></a>
 
--- the data
+.. without a formal definition we can just look at this and say that the series was trending where there was a spike just before time 600. as a start then let's just define a trend as a value in a time series that was greater than was 'expected'.
 
-tweets about cheese for a period 20100125_2010022; 
-436e3 entries / 27days
-=> 16e3 a day
+<h3>how can we calculate trending?</h3>
 
-extract tweet text (these gzips are full of partial records thus thou shalt redirect json parsing to dev null)
-(see run.sh)
+one really nice simple algorithm for detecting a trend is to say a value, v, is trending if v > mean + 3 * standard deviation of the data seen so far. (thanks <a href="http://www.twitter.com/peteskomoroch">@peteskomoroch</a> for the suggestion, works a treat)
 
-first of all how many tweets per hour over this time? (678 entries)
-<img src="tweets_over_day.60.nonaggregated.png"/>
+let's consider the same time series as before but this time with some overlaid data;
+<font color="green">green - the mean</font>
+<font color="red">red - minimum trend value ( = mean + 3 * std dev )</font>
+<font color="blue">blue - instances where the value > minimum trend value</font>
 
-what trending can we do on this timeseries?
-how do we decide give a new value whether it respresents a trend?
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.trending.png"/></a>
 
-TODO: REMOVE OUTLIERS!!!
+here's a zoom in on the last 200 values 
 
-1. mean and std dev over entire set
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.trending.zoom.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.trending.zoom.png"/></a>
 
-one simple way is compare the value to the historical mean. to make the comparison robust to 
-normal flucuenation we compare to mean +/- 2x std dev
+this works surprisingly well, the mean gives a solid expectation of the value with the standard deviation covering the daily periodic nature of the data.
 
-<img src="tweets_over_day.60.trending.png"/>
-<img src="tweets_over_day.60.trending.zoom.png"/>
+it's not perfect though as this system _only_ ever allows a trend around the peaks of the cycle. 
 
-this gives us a model for the entire dataset; simplest
+for example consider the troughs which have a frequency value around 250. if we had a value in one of those timeslot's that was 500, ie twice what was expected given that time of day, it would not be considered trending since the value has to be over 1500
 
-2. mean and std dev; compared to this time in previous days
+<h3>facet by hour</h3>
 
-makes each time series much smoother; but not as good at predicting the overall trend.
-perhaps this needs to be more than 2x the std dev??
-it's getting trends on the downways slope. this is ok (?)
-
-<img src="tweets_over_day.60.periodic_trending.png"/>
-<img src="tweets_over_day.60.periodic_trending.zoom.png"/>
-
-how about with a sliding window, with as little as 10 previous numbers?
-suprisingly, not too different. i guess this indicates that compared 
-to same time of day the data is quite stable.
-
-<img src="tweets_over_day.60.periodic_trending.sliding.png"/>
-<img src="tweets_over_day.60.periodic_trending.sliding.zoom.png"/>
-
-this gives us model per 1hr chunk of the day; works well for values which are 'trending' even though the values are on the downturn
-
-3. mean and std dev; per term
-
-break down in terms in 1/2/3 grams
-
-250e3 uniq 1grams; 64% of which are uniq
-1.5e6 uniq 2grams; 75% of which are uniq
-3.1e6 uniq 3grams; 86% of which are uniq
-
-let's consider some common 2grams.
-
-we consider two cases, 
-  only consider cases where values are non zero
-  fill in values with zero 
-
-i think the 
-
-#4 22532 grilled cheese
-<img src="tweets_over_day.60.grilledcheese.trending.png"/>
-<img src="tweets_over_day.60.grilledcheese.withzerofill.trending.png"/>
-<!--<img src="tweets_over_day.60.grilledcheese.trending.zoom.png"/>-->
-
-most of the spikes are unexplainable but some are from a single user...
-
-poor fangirl @rachelljonas spent 10 minutes tweeting like crazy trying to get the attention of @nickjonas (some popstar i've never heard of)
-and bumped up grilled cheese for a single timeslot
-
-Wed Feb 03 23:44:57 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:44:59 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco??
-Wed Feb 03 23:45:03 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :)
-Wed Feb 03 23:45:07 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :0
-Wed Feb 03 23:45:11 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :d
-Wed Feb 03 23:45:17 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :)
-Wed Feb 03 23:45:23 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :d :d
-Wed Feb 03 23:45:27 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :) :)
-Wed Feb 03 23:45:33 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :) :) :) :)
-Wed Feb 03 23:45:36 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :p
-Wed Feb 03 23:45:41 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :s
-Wed Feb 03 23:45:44 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?:)
-Wed Feb 03 23:45:50 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? =)
-Wed Feb 03 23:45:56 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? =d
-Wed Feb 03 23:46:04 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? =p
-Wed Feb 03 23:46:34 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? .
-Wed Feb 03 23:46:37 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco
-Wed Feb 03 23:46:42 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco..
-Wed Feb 03 23:46:45 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?????
-Wed Feb 03 23:46:50 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco??????
-Wed Feb 03 23:46:55 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?????????????
-Wed Feb 03 23:46:59 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco???????????
-Wed Feb 03 23:47:05 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :) :) ?
-Wed Feb 03 23:47:13 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?!?!?
-Wed Feb 03 23:47:18 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?????!
-Wed Feb 03 23:47:22 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco???????
-Wed Feb 03 23:47:27 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco???????????????????
-Wed Feb 03 23:47:32 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?????????????????????????????
-Wed Feb 03 23:47:36 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco??????????????????????????????
-Wed Feb 03 23:47:47 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco???????????????
-Wed Feb 03 23:47:53 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco??????????????
-Wed Feb 03 23:47:56 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?!
-Wed Feb 03 23:48:02 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :-)
-Wed Feb 03 23:48:10 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :) :) :)
-Wed Feb 03 23:48:16 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):):):):):d
-Wed Feb 03 23:48:23 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):):):):):):):)
-Wed Feb 03 23:48:27 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:48:36 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ;)
-Wed Feb 03 23:48:43 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ;p
-Wed Feb 03 23:48:48 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :0
-Wed Feb 03 23:48:54 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :o
-Wed Feb 03 23:48:59 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :s
-Wed Feb 03 23:49:02 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :*
-Wed Feb 03 23:49:09 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :&gt;
-Wed Feb 03 23:49:20 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :&gt; &lt;----twitter bird :)
-Wed Feb 03 23:49:24 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??
-Wed Feb 03 23:49:28 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ???
-Wed Feb 03 23:49:32 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ?????
-Wed Feb 03 23:49:36 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?? ? ?
-Wed Feb 03 23:49:39 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ?
-Wed Feb 03 23:49:51 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ?? ? ? ?
-Wed Feb 03 23:49:57 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??? :0
-Wed Feb 03 23:50:01 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:50:06 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?@nickjonas who would win in a fight, a grilled cheese or a taco?&gt;
-Wed Feb 03 23:50:11 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?@nickjonas who would win in a fight, a grilled cheese or a taco? :)
-Wed Feb 03 23:50:33 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :))
-Wed Feb 03 23:50:37 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco??? ?
-Wed Feb 03 23:50:40 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ? ?
-Wed Feb 03 23:50:43 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ? ? ?
-Wed Feb 03 23:50:52 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?? ? ?
-Wed Feb 03 23:50:56 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ???
-Wed Feb 03 23:50:59 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? /? ?
-Wed Feb 03 23:51:04 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? '
-Wed Feb 03 23:51:06 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??
-Wed Feb 03 23:51:11 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? &gt;&gt; &gt;
-Wed Feb 03 23:51:17 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??? ?
-Wed Feb 03 23:51:22 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??? / ?
-Wed Feb 03 23:51:25 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ?/
-Wed Feb 03 23:51:30 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?&gt;&gt;&gt; ?
-Wed Feb 03 23:51:34 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco???.?
-Wed Feb 03 23:51:37 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? /?
-Wed Feb 03 23:51:42 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?//.
-Wed Feb 03 23:51:46 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?//
-Wed Feb 03 23:51:52 +0000 2010	rachelljonas	//@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:51:57 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? &lt;3
-Wed Feb 03 23:52:11 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!
-Wed Feb 03 23:52:16 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!
-Wed Feb 03 23:52:20 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!
-Wed Feb 03 23:52:24 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!
-Wed Feb 03 23:52:34 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!
-Wed Feb 03 23:52:37 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!!!!!!!!!
-Wed Feb 03 23:52:43 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!!!!!!!
-Wed Feb 03 23:52:47 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Wed Feb 03 23:52:50 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Wed Feb 03 23:52:53 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Wed Feb 03 23:53:30 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? i miss you! come back to denver! come back!
-Wed Feb 03 23:53:39 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:53:43 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??????
-Wed Feb 03 23:53:47 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??????????????
-Wed Feb 03 23:53:52 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ????????????????????????????????????
-Wed Feb 03 23:53:57 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ????????????????????????????????
-Wed Feb 03 23:54:00 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ??????????????????????
-Wed Feb 03 23:54:03 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;
-Wed Feb 03 23:54:06 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? .&gt;?&lt;./
-Wed Feb 03 23:54:10 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ?///
-Wed Feb 03 23:54:17 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? @nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:54:22 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? &gt;??@nickjonas who would win in a fight, a grilled cheese or a taco?
-Wed Feb 03 23:54:31 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? @nickjonas who would win in a fight, a grilled cheese or a taco? ??
-Wed Feb 03 23:54:36 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :) :l)
-Wed Feb 03 23:54:41 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :0)
-Wed Feb 03 23:54:45 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):)
-Wed Feb 03 23:54:47 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? &gt;p
-Wed Feb 03 23:54:51 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :)
-Wed Feb 03 23:54:56 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):):)
-Wed Feb 03 23:55:03 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):):)
-Wed Feb 03 23:55:12 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? @nickjonas who would win in a fight, a grilled cheese or a taco? ;)
-Wed Feb 03 23:55:19 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ;0
-Wed Feb 03 23:55:22 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :0
-Wed Feb 03 23:55:25 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? ;)
-Wed Feb 03 23:55:35 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :):):;
-Wed Feb 03 23:55:39 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :-)
-Wed Feb 03 23:55:49 +0000 2010	rachelljonas	@nickjonas who would win in a fight, a grilled cheese or a taco? :)_)
-
-raises an interesting point about spam, potentially we don't want to count all the tweets from a user within a small
-enough time frame??
-
-#5 18639 cream cheese
-<img src="tweets_over_day.60.creamcheese.trending.png"/>
-<img src="tweets_over_day.60.creamcheese.withzerofill.trending.png"/>
-<!--<img src="tweets_over_day.60.creamcheese.trending.zoom.png"/>-->
-
-#412 763 goats cheese
-<img src="tweets_over_day.60.goatscheese.trending.png"/>
-<img src="tweets_over_day.60.goatscheese.withzerofill.trending.png"/>
-
-#1483 288 apple juice
-<img src="tweets_over_day.60.applejuice.trending.png"/>
-<img src="tweets_over_day.60.applejuice.withzerofill.trending.png"/>
-
-how to allow smaller frequency trends to trump trends of larger frequency items?
-while not letting low values to blow everything up 
-ie a 'freq' of 5 (from trend value of 2)
-perhaps trend value = Math.log10(freq) * (freq/min_trend)
-
-ruby normalised_trend_values.rb > test.r
-R --vanilla < test.r
-
-cat normalised_trend_values.rb
-#!/usr/bin/env ruby
-['grilledcheese','creamcheese','goatscheese','applejuice'].each do |term|
-puts <<EOF
-  data = read.delim('tweets_over_day.60.#{term}.trending.tsv', header=FALSE)
-  freq = data$V2
-  min_trending = data$V4  
-  over_trend = freq / min_trending
-  normalised_trend = log10(freq) * over_trend
-  data2 = cbind(data, over_trend, normalised_trend)
-  data2[data2$over_trend>1,]
-EOF
-end
-
->   data = read.delim('tweets_over_day.60.grilledcheese.trending.tsv', header=FALSE)
-     V1  V2       V3       V4 over_trend normalised_trend
-230 229 182 32.10435 103.0437   1.766241         3.991831
-366 366 179 32.71311 105.6309   1.694580         3.817639
-391 391 113 33.32481 107.9641   1.046645         2.148844
-392 392 109 33.51786 108.9364   1.000584         2.038617
-
->   data = read.delim('tweets_over_day.60.creamcheese.trending.tsv', header=FALSE)
-     V1  V2       V3       V4 over_trend normalised_trend
-221 220  79 25.90045 71.34388   1.107313         2.101267
-323 322  78 26.51084 73.97633   1.054391         1.995008
-364 363  81 26.93132 75.07515   1.078919         2.059101
-377 376 142 27.58886 79.66678   1.782424         3.836291
-
->   data = read.delim('tweets_over_day.60.goatscheese.trending.tsv', header=FALSE)
-     V1 V2       V3       V4 over_trend normalised_trend
-44   76  8 1.931818 6.193591   1.291658         1.166483
-205 367  6 1.824390 5.340973   1.123391         0.874168
-223 393  8 1.869955 5.580961   1.433445         1.294530
-268 464  9 1.847015 5.605859   1.605463         1.532001
-289 510 12 1.958478 6.221262   1.928869         2.081599
-301 528  9 1.990033 6.428887   1.399931         1.335874
-382 676  9 1.994764 6.379383   1.410795         1.346240
-
->   data = read.delim('tweets_over_day.60.applejuice.trending.tsv', header=FALSE)
-     V1 V2       V3       V4 over_trend normalised_trend
-13   69  2 1.076923 1.876331   1.065910        0.3208709
-14   75  4 1.285714 3.671899   1.089355        0.6558568
-117 390  4 1.333333 3.294495   1.214147        0.7309892
-205 654  4 1.351220 3.324714   1.203111        0.7243449
+one way to handle this is to not have a single time series but instead maintain 24 time series, one for each hour of the day.
 
 
-seems fair enough..
+faceting in this way gives the following trending 
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.png"/></a>
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.zoom.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.periodic_trending.zoom.png"/></a>
+
+and though this doesn't present any cases were there trends at a trough we can see it was prettttty close a number of times.
+
+<h3>facet by ngram</h3>
+
+how else can we facet?
+
+one other interesting way to facet, and the main purpose of this project, is to maintain a seperate time series for n-grams in the tweet.
+
+the top 10 2-grams in my dataset are...
+
+<table>
+<tr><td>freq</td><td>term1</td><td>term2</td></tr>
+<tr><td>44389</td><td>and</td><td>cheese</td></tr>
+<tr><td>33454</td><td>cheese</td><td>and</td></tr>
+<tr><td>22815</td><td>mac</td><td>cheese</td></tr>
+<tr><td>22532</td><td>grilled</td><td>cheese</td></tr>
+<tr><td>18639</td><td>cream</td><td>cheese</td></tr>
+<tr><td>15225</td><td>the</td><td>cheese</td></tr>
+<tr><td>13592</td><td>mac</td><td>and</td></tr>
+<tr><td>12967</td><td>chuck</td><td>cheese</td></tr>
+<tr><td>12598</td><td>of</td><td>cheese</td></tr>
+<tr><td>12296</td><td>cheese</td><td>on</td></tr>
+</table>
+
+let's look at the time series for a few of them.
+
+<h4>#4 grilled cheese</h4>
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.grilledcheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.grilledcheese.trending.png"/></a>
+
+we get an interesting result from the very first spike at around 225... poor fangirl <a href="http://www.twitter.com/rachelljonas">@rachelljonas</a> spent 10 minutes tweeting like crazy trying to get the attention of <a href="http://www.twitter.com/nickjonas">@nickjonas</a> (some popstar i've never heard of) and bumped up 'grilled cheese' for a single timeslot (here's <a href="http://www.matpalm.com/trending/rachelljonas.html">her attempt</a> to get his attention...)
+
+this raises an interesting point about spam, as is possibly my first pre processing data cleaning steps, potentially we don't want to count all the tweets from a user within a small enough time frame??
+
+the next spike at around 375 shows potentially my first true trending topic, a sudden increase in the discussion of making grilled cheese. <a href="http://www.matpalm.com/trending/grilled_cheese.html">the data</a> has no dups so looks like it was just grilled cheese time!
+
+<h4>#5 cream cheese</h4>
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.creamcheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.creamcheese.trending.png"/></a>
+
+one major spike at about 376, looking at <a href="http://www.matpalm.com/trending/cream_cheese.html">the data</a>. there might have been a competition being run relating to #gno #bagelfuls ? 
+
+<h4>#412 goats cheese</h4>
+
+nothing uber interesting with the 'goats cheese' time series but it does illustrate an interesting point. for all the examples we've looked at so far each timeslot of an hour has included as least one entry for the 2gram. by the time we're getting to the lower entries there are as many timeslots with a zero frequency as there are with non zero frequency.
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.withzerofill.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.withzerofill.trending.png"/></a>
+
+interestingly if you only consider the cases where the frequency values are non zero i think you get a better sense of where the values are trending.
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.goatscheese.trending.png"/></a>
+
+this also turns out to make things easier to process :)
+
+<h4>#1483 apple juice</h4>
+
+with 'apple juice', an even less frequent 2gram, the effect is even more noticable if you ignore the zero frequency cases.
+
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.withzerofill.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.withzerofill.trending.png"/></a>
+<a href="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.trending.png"><img src="http://www.matpalm.com/trending/tweets_over_day.60.applejuice.trending.png"/></a>
+
+so with two ways of faceting the data, either timeslots or ngrams, the next step is porting the algorithm to pig so we can run it at scale.
 
 
-moving onto pig
 
-have a workable model in pig.
-after 50 timesteps (of 677) model is 5m with 174e3 entries
-
-wc -l trending.model.0*
-    0 trending.model.000
-    0 trending.model.001
-    0 trending.model.002
-    0 trending.model.003
-    0 trending.model.004
-    0 trending.model.005
-    0 trending.model.006
-    0 trending.model.007
-    0 trending.model.008
-    0 trending.model.009
-    0 trending.model.010
-    1 trending.model.011
     0 trending.model.012
     0 trending.model.013
     1 trending.model.014
@@ -325,7 +144,6 @@ wc -l trending.model.0*
 
 lets consider some cases...
 
-
 ------------------------------
 trending.model.011
 
@@ -334,38 +152,38 @@ mat@ubishop:~/dev/trending/pig$ cat trending.model.011
 to make		56.3931315134716	1.0107613900884973	1.774770509940967
 
 mat@ubishop:~/dev/trending/pig$ grep to\ make chunks/011
-11 brian winnipeg manitoba ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 rick redondo beach ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 peter florissant mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 roel austin tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 grace andover ma us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 kaj san francisco ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 greg dallas tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 jane cincinnati oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 sherron new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 jim toronto ontario ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 megan solebury pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 stan kennett square pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 paul granite city il us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 klein eden delft nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 bob & pat albion in us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 kees goirle nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 leslie has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 robin bay city tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 angela imperial ne us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 kevin san jose ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 lynne north olmsted oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 rick cochrane alberta ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 adele new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 jennifer kingston mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 christian lauterach at has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 tami petersburg va us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 gretchen kingwood tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 tanya has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 david fulton mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 martha atascadero ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 ton amsterdam centrum nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
-11 kashi has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make chee
+      1 11 brian winnipeg manitoba ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 rick redondo beach ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 peter florissant mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 roel austin tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 grace andover ma us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 kaj san francisco ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 greg dallas tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 jane cincinnati oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 sherron new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 jim toronto ontario ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 megan solebury pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 stan kennett square pa us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 paul granite city il us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 klein eden delft nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 bob & pat albion in us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 kees goirle nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 leslie has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 robin bay city tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 angela imperial ne us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 kevin san jose ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 lynne north olmsted oh us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 rick cochrane alberta ca has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 adele new york ny us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 jennifer kingston mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 christian lauterach at has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 tami petersburg va us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 gretchen kingwood tx us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 tanya has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 david fulton mo us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 martha atascadero ca us has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 ton amsterdam centrum nl has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make cheese
+      1 11 kashi has given loan amount of 4500 to oasis group guerero mexico reason purchase of raw materials to make chee
 
 some interesting observations...
 
@@ -414,23 +232,23 @@ mat@ubishop:~/dev/trending/pig$ cat trending.model.017
 is the				25.098598609851667	1.1554429970690459	1.689717525600142
 
 mat@ubishop:~/dev/trending/pig$ grep is\ the chunks/017 | sort -n | uniq -c
-      1 17	alright who is the wise guy that took a cheese grater to cole aldrichs face to make him look so ugly kusucks
-      1 17	brianezell why is there something other than meat and cheese on there
-      1 17	chocolate chip cheese cake is the best
-      1 17	crystalklyre ooo sounds yummy this is the first time anyoine has said mac n cheese n i didnt crave it somethings wrong lol
-      1 17	dabaddest yuuup u mad girl d red pack is the bess ever hmmm crix cheese n some milo heaven
-      1 17	he is the mouse messiah and he will lead the other mice to the promised land of cheese and peanut butter i have fun in pet stores
-      1 17	iamdomo is there cheese lol
-      1 17	is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
-      1 17	jpolittevt umm so is the steak with creamy blue cheese sauce definitely worth the money love rays the steaks
-      1 17	kevinbhealey i think the whole proverb is the early bird gets the worm but its the second mouse who gets the cheese
-      1 17	matthardybrand tell me you didn t make the rookie mistake of ordering a bowl of skyline a 3 way and 2 cheese coneys is the way to go
-      1 17	nope rt 3carryonitems rodimusprime arent you glad cheese eyes is the gm
-      1 17	omg this cheese roll & lemon pepper chicken is the biz right now
-      1 17	the only thing that i would have changed is the size i made them too big very tasty little devils sharp cheddar cheese bacon and more
-      1 17	what the hell is feta cheese this is the grossest salad ever
-      7 17	littlecbeadles is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
-      9 17	justinbieber is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      9 17 justinbieber is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      7 17 littlecbeadles is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      1 17 what the hell is feta cheese this is the grossest salad ever
+      1 17 the only thing that i would have changed is the size i made them too big very tasty little devils sharp cheddar cheese bacon and more
+      1 17 omg this cheese roll & lemon pepper chicken is the biz right now
+      1 17 nope rt 3carryonitems rodimusprime arent you glad cheese eyes is the gm
+      1 17 matthardybrand tell me you didn t make the rookie mistake of ordering a bowl of skyline a 3 way and 2 cheese coneys is the way to go
+      1 17 kevinbhealey i think the whole proverb is the early bird gets the worm but its the second mouse who gets the cheese
+      1 17 jpolittevt umm so is the steak with creamy blue cheese sauce definitely worth the money love rays the steaks
+      1 17 is the kool 2 my aid the ice 2 my cube the cheese 2 my macaroni the legit 2 my quit pahaha aand the follow 2 the me
+      1 17 iamdomo is there cheese lol
+      1 17 he is the mouse messiah and he will lead the other mice to the promised land of cheese and peanut butter i have fun in pet stores
+      1 17 dabaddest yuuup u mad girl d red pack is the bess ever hmmm crix cheese n some milo heaven
+      1 17 crystalklyre ooo sounds yummy this is the first time anyoine has said mac n cheese n i didnt crave it somethings wrong lol
+      1 17 chocolate chip cheese cake is the best
+      1 17 brianezell why is there something other than meat and cheese on there
+      1 17 alright who is the wise guy that took a cheese grater to cole aldrichs face to make him look so ugly kusucks
 
 annoying. these are all from the same person in the same time slot
 
@@ -439,6 +257,34 @@ TODO: consider uniq out to disallow a single person from influencing the trends
 ------------------------------
 trending.model.018
 
+mat@eee:~/dev/trending/pig$ cat trending.model.018
+my cheese		    21.5613369821738	1.1594828289483705	1.620887435955164
+when i			    15.665240029793154	1.1490408040838476	1.4423593286082483
+go to			    17.73727038299106	1.071190752000929	1.3697890314285566
+i hate			    17.757390470486225	1.0699770347213495	1.3682369860867558
+on my			    18.485285790035768	1.0278445362333366	1.3143599019280696
+
+mat@eee:~/dev/trending/pig$ grep my\ cheese chunks/018 | sort | uniq -c | sort -nr | perl -plne's/\t/ /;'
+     12 18 rt therealjuliann i hate when i go to subway and they disrespectfully throw my cheese on my sandwich like i aint shit
+      1 18 thoughtsonthetoilet i cant believe that fat bitch tired 2 take my cheese burger
+      1 18 rt therealjuliann i hate when i go to subway and they disrespectfully throw my cheese on my sandwich like i aint shit &lt random
+      1 18 rt therealjuliann i hate when i go to subway and they disrespectfully throw my cheese on my sandwich like i aint shit lmao mean
+      1 18 rt therealjuliann i hate when i go to subway and they disrespectfully throw my cheese on my sandwich like i aint shit lmao
+      1 18 rt therealjuliann i hate when i go 2 subway & they disrespectfully throw my cheese on my sandwich like i aint shit&lt i b ready 2 curse em out
+      1 18 rt nikajanea yah yah yah i want my cheese cake girl lol
+      1 18 macclickchic you can come over and have some and eat all my cheese again
+      1 18 kayballard perhaps i could rename the book who moved my cheese to who ordered the manure lol
+      1 18 im so pound of my cheese makin skills
+      1 18 im going to throw up my cheese fries tribute dinner to further honor teen mom
+      1 18 i hate when i go to subway and they disrespectfully throw my cheese on my sandwich like i aint shit
+      1 18 clawzzz fun night btw thanx for eating my cheese & grapes
+      1 18 aaliyaaaa fatty lol i just ate my cheese cake seriously the best ive ever had never had it from scratch before
+
+and by the looks of it this single retweet will be the reason for the other too.
+
+TODO: what is the end goal? we could collate these to give a score per tweet for those that match 
+but is this really what we want. i want the trends, not the tweets, though it seems some analysis
+on the top tweets might help decide the trends a little bit...
 
 ------------------------------
 trending.model.030
@@ -455,7 +301,6 @@ did you		9.197294363825087	1.087276279786382	1.087276279786382
 live in		10.999999999549999	1.0000000000409093	1.0413926852008277
 having a	6.058184976694733	1.155461582458829	0.9764783186477279
 
-lets consider the top trending... 'philly cheese'
 mat@ubishop:~/dev/trending/pig$ grep philly\ cheese chunks/030|sort|uniq -c |sort -n
       1 30			channingtatum i love philly cheese steaks i live in philly love youu &lt 3
       1 30			channingtatum philly cheese steaks are amazing just like you

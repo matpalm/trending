@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'cgi'
 
 class String
   def without_urls 
@@ -14,7 +15,7 @@ class String
   end
   
   def without_punctionation
-    gsub(/[\',]/,'').gsub(/[^a-z0-9&@]/, ' ')
+    gsub(/[\',]/,'').gsub(/[^a-z0-9&@#]/, ' ')
   end
   
   def duplicate_spaces_removed
@@ -22,15 +23,15 @@ class String
   end
   
   def sanitise
-    self.
+    CGI.unescapeHTML(self.
       #chomp.
       downcase.
       without_urls.
       #without_at_names.
       #with_amps_spaced.
-      without_punctionation.
+      #without_punctionation.
       duplicate_spaces_removed.
-      strip
+      strip)
   end
   
 end
