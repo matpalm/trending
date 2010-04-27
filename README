@@ -1,5 +1,11 @@
 trying out some simple trending algorithms
-(SERIOUS WORK IN PROGRESS)
 
-see blognotes.html for the work in progress version of the project pages
-see run.sh for the end to end script to build all the data for generating the prj page graphs
+notes on http://matpalm.com/blog/tags/e15
+
+to run ruby version
+bash> source rc
+then see lib/run.sh for the end to end script to build all the data for generating the prj page graphs
+
+ro run pig version
+cd pig
+cat run.sh for info
