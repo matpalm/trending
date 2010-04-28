@@ -1,6 +1,53 @@
 <h4>thinking in pig latin</h4>
 
+<p>
+prototyping in ruby was a great way to prove the concept but my main motivation for this project
+was to play some more with pig.
+</p>
 
+<p>
+the main relation we want to model is the idea of a trend ( one record per facet ).
+</p>
+
+are p's required when we paste in wordpress?!
+
+to calculate whether a new value is trending or not we need to be able to calculate the mean and standard
+deviation of the time series and there are two ways to do this;
+
+the first is the naive way our ruby implementation has done it. 
+keep track of all frequencies seen so far and recalculating as required. 
+this is simple but is not constant in space (alarm bells!)
+
+a more elegant way is to keep track of a few key components and fold new values in.
+
+the mean at time n+1 can be calculated from the mean at time n (if you keep also keep track of n)
+eg mean at time n+1 = ( (mean at time n * n) + new value ) / n+1
+
+the standard deviation at time n+1 can be similiarly calculated if you keep track of the mean of the square of
+the values.
+
+so our main relation has the schema <pre>{key: chararray,m: double,ms: double,n: int}</pre>
+
+
+
+steps
+- load existing model
+- convert next chunk into ngrams
+- fold next chunk of data into model
+- query model for highest trends based 
+
+concerns
+- want to model trend per ngram in constant space
+- don't know at the start what ngrams we'll see in each chunk
+
+TODO:
+
+keep lastN values in mongo?
+{ :ngram => 'cream cheese', :freqs => [12,34,56,34,56,67] }
+
+- lookup freqs
+- if size>max; then shift array and issue shift op to mongo
+- append to end and issue append op to mongo
 
 NEXT POSTS!!!!!!!!!!!!!!!!!!
 
