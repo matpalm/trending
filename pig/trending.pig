@@ -1,4 +1,3 @@
-
 -- pig -x local -param model_in=model.00 -param model_out=model.01 -param next_chunk=2grams_over_day.test.part00 trending.pig
 
 -- load sqrt and log10 functions

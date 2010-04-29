@@ -5,9 +5,8 @@ def emit tuple
   puts "#{tuple.join(" ")}"
 end
 
-STDIN.each do |record|
-  key, text = record.split("\t")
-  
+STDIN.each do |text|
+
   terms = text.split
   next if terms.size < NGRAM_SIZE
 
