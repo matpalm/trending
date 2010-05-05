@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby 
 
+puts "#!/usr/bin/env bash"
 puts "set -x"
 puts "rm model.* calc_min_trending.model* trending.model*"
 
-(0..200).each do |i|
+(0..700).each do |i|
   model_in = sprintf("model.%03d",i)
   model_out = sprintf("model.%03d",i+1)
   next_chunk = sprintf("chunks/%03d",i)

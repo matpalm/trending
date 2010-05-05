@@ -1,20 +1,21 @@
 -- pig -x local -param model_in=model.00 -param model_out=model.01 -param next_chunk=2grams_over_day.test.part00 trending.pig
 
 -- load sqrt and log10 functions
---- for local 
-register piggybank.jar;
+register $piggybankjar
+--piggybank.jar;
 --- for aws elastic map reduce
--- register /home/hadoop/lib/pig/piggybank.jar;
+--register /home/hadoop/lib/pig/piggybank.jar;
 
 -- load current model
 -- append 0 frequency as indicator of, potentially, not requiring update
-raw_model = load '$model_in' as (key:chararray, n:int, m:double, ms:double);
+raw_model = load '$root_path/model/$input' as (key:chararray, n:int, m:double, ms:double);
+--raw_model = load 's3n://matpalm/trending/run1/model/0001' as (key:chararray, n:int, m:double, ms:double);
 --raw_model = load 's3://matpalm/test' as (n:int);
 model = foreach raw_model generate key, n, m, ms, 0 as f;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
-next_chunk = load '$next_chunk';
-define ngramer `ngram.rb` ship('ngram.rb');
+next_chunk = load '$root_path/chunks/$input';
+define ngramer `ruby ngram.rb` cache('$root_path/scripts/ngram.rb#ngram.rb');
 ngrams = stream next_chunk through ngramer as (key:chararray);
 ngrams_grouped = group ngrams by key;
 ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
@@ -44,7 +45,7 @@ split model_n into to_update if f>0, not_to_update if f==0;
 -- we need to update m, ms in one step and sd (which relies on new m, ms values) in another step
 -- also ? is not short circuited so had to use n+0.000001 for denom since rhs is evaled
 -- even when n==0
-model_n1 = foreach to_update {
+updated = foreach to_update {
 	m2  = ((n*m)+f)/(n+1);
 	ms2 = ((n*ms)+(f*f))/(n+1);
 	generate key, n+1 as n, m2 as m, ms2 as ms, f;
@@ -52,52 +53,39 @@ model_n1 = foreach to_update {
 
 -- store this model for next time
 -- (includes freq but will be dropped by next load)
-to_store = union model_n1, not_to_update;
-store to_store into '$model_out';
+model_n1 = union updated, not_to_update;
+store model_n1 into '$root_path/model/$output';
 
 -- filter out to only include those that could be trending 
 -- (ie have more than one record; ie those that have been seen before this chunk)
-requiring_trending_check = filter model_n1 by n>1;
+requiring_trending_check = filter updated by n>1;
 
 -- calculate trending scores
 calc_min_trending = foreach requiring_trending_check {
 	sd_lhs = n * ms;
 	sd_rhs = n * (m*m);	
 	sd = org.apache.pig.piggybank.evaluation.math.SQRT((sd_lhs-sd_rhs)/n);
-	min_trend_value = m + (3*sd);
+	min_trend_value = m + (2*sd);
 	generate key, f, m as mean, sd as std_dev, min_trend_value as min_trend_value, f / min_trend_value as percent_over_trend;
 }
--- for debugging!!
-store calc_min_trending into 'calc_min_trending.$model_in';
 
 -- filter those with a positive trending percentage
 trending = filter calc_min_trending by percent_over_trend > 1;
 
 -- scale by log of frequency to get final score
+-- todo: not sure if this worth doing?
 trending2 = foreach trending {
 	normalised_trend_value = org.apache.pig.piggybank.evaluation.math.LOG10(f) * percent_over_trend;
 	generate key, min_trend_value, percent_over_trend, normalised_trend_value as normalised_trend_value;
 }
 
--- store and store (todo: limit to top N?)
-trending_sorted = order trending2 by normalised_trend_value desc;
-store trending_sorted into 'trending.$model_in';
+-- workaround for pig bug re: sorting empty relation
+trending_dummy = load '$root_path/trending/dummy' as (key:chararray, n:int, m:double, ms:double);
+trending2_plus_dummy = union trending2, trending_dummy;
 
+-- sort, limit and store
+trending_sorted = order trending2_plus_dummy by normalised_trend_value desc;
+top_50 = limit trending_sorted 50;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- need to inject a dummy row, saving an empty relation cause grief. (PIG MR bug)
+store top_50 into '$root_path/trending/$input';
