@@ -1,7 +1,41 @@
 to run ternding from ruby 
-bash> ruby 2gram_trends.test.rb
+$ ruby 2gram_trends.test.rb
 
 to run trending from pig (wip)
-bash> gen_run_pig_version.rb > run_pig_version.sh
-bash> sh run_pig_version.sh
+$ gen_run_pig_version.rb > run_pig_version.sh
+$ sh run_pig_version.sh
 
+$ elastic-mapreduce --create --name test_by3 --num-instances 3 --pig-script --step-name "11_solo" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=005 --args -p,output=006 --args s3n://matpalm/trending/run1/scripts/trending.pig
+
+$ elastic-mapreduce --jobflow j-240DHRM9K5YEP --pig-script --step-name "10_003" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=006 --args -p,output=007 --args s3n://matpalm/trending/run1/scripts/trending.pig
+
+$ elastic-mapreduce --create --name 'pigflowtest2' --num-instances 1 --json pigflow.json --alive
+
+        [ 
+          { 
+            "Name": "setup", 
+            "ActionOnFailure": "CANCEL_AND_WAIT", 
+            "HadoopJarStep": { 
+              "Jar": "s3://us-east-1.elasticmapreduce/libs/script-runner/script-runner.jar",
+              "Args": [ 
+                 "s3://us-east-1.elasticmapreduce/libs/pig/0.3/fetch"
+              ] 
+            } 
+          },
+          { 
+            "Name": "process 009", 
+            "ActionOnFailure": "CANCEL_AND_WAIT", 
+            "HadoopJarStep": { 
+              "Jar": "/home/hadoop/lib/pig/pig-0.3-amzn.jar",
+              "Args": [ 
+                 "-p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar", 
+                 "-p,root_path=s3n://matpalm/trending/run1", 
+		 "-p,input=009",
+		 "-p,output=010",
+                 "s3n://matpalm/trending/run1/scripts/trending.pig"
+              ] 
+            } 
+          }
+        ] 
+
+and for none interactive (ie no --alive) we can run TERMINATE_JOB_FLOW instead CANCEL_AND_WAIT 

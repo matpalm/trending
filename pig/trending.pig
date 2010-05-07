@@ -15,7 +15,7 @@ model = foreach raw_model generate key, n, m, ms, 0 as f;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
 next_chunk = load '$root_path/chunks/$input';
-define ngramer `ruby ngram.rb` cache('$root_path/scripts/ngram.rb#ngram.rb');
+define ngramer `ruby ngram.rb` cache('$root_path/ngram.rb#ngram.rb');
 ngrams = stream next_chunk through ngramer as (key:chararray);
 ngrams_grouped = group ngrams by key;
 ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
@@ -34,6 +34,14 @@ model_n = foreach model_plus_seed2 generate
 	MAX(model_plus_seed.m) as m,
 	MAX(model_plus_seed.ms) as ms,
 	MAX(model_plus_seed.f) as f;
+
+-- dump the top20 items by frequency
+-- that are occuring for the first time
+frequent_first_time = filter model_n by n==0;
+key_f_fft = foreach frequent_first_time generate key,f;
+ordered_fft = order key_f_fft by f desc;
+top_fft = limit ordered_fft 20;
+store top_fft into '$root_path/fft/$input';
 
 -- now split into two relations; 
 -- one requiring update (current for this round)
@@ -82,6 +90,7 @@ trending2 = foreach trending {
 -- workaround for pig bug re: sorting empty relation
 trending_dummy = load '$root_path/trending/dummy' as (key:chararray, n:int, m:double, ms:double);
 trending2_plus_dummy = union trending2, trending_dummy;
+dump trending2_plus_dummy;
 
 -- sort, limit and store
 trending_sorted = order trending2_plus_dummy by normalised_trend_value desc;
