@@ -1,16 +1,8 @@
 #!/usr/bin/env ruby 
-
+raise "usage: gen_run_pig_version.rb worknig_dir" unless ARGV.length==1
 puts "#!/usr/bin/env bash"
-puts "set -x"
-puts "rm model.* calc_min_trending.model* trending.model*"
-
 (0..700).each do |i|
-  model_in = sprintf("model.%03d",i)
-  model_out = sprintf("model.%03d",i+1)
-  next_chunk = sprintf("chunks/%03d",i)
-  puts "touch #{model_in}" 
-  puts "time pig -x local -param model_in=#{model_in} -param model_out=#{model_out} -param next_chunk=#{next_chunk} trending.pig"
-  #puts "sort calc_min_trending.#{model_in}"
-  puts "wc -l trending.#{model_in}"
-  #puts "sort #{model_out}"
+  input = sprintf("%03d",i)
+  output = sprintf("%03d",i+1)
+  puts "time pig -x local -p root_path=#{ARGV[0]} -p input=#{input} -p output=#{output} trending.pig"
 end

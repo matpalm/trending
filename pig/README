@@ -1,16 +1,25 @@
 
-
-# regenerate chunks
+--- ruby version
+# to run ternding from ruby 
+$ cd trending
 $ source rc
-$ zcat /data/twitter/gardenhose/sample.* | head | extract_date_and_text.rb | split_into_chunks.rb
+$ 2gram_trends.test.rb
 
-to run ternding from ruby 
-$ ruby 2gram_trends.test.rb
+--- pig version
 
-to run trending from pig (wip)
-$ gen_run_pig_version.rb > run_pig_version.sh
+# regenerate chunks; each corresponds to an hours worth of tweets
+$ cd trending/pig
+$ source rc
+$ zcat /data/twitter/gardenhose/cheese.20100*gz | extract_date_and_text.rb 2>/dev/null | split_into_chunks.rb
+
+# to run trending from pig (wip)
+$ bootstrap_dir.sh blah_dir
+
+# and then generate a runmany script
+$ gen_run_pig_version.rb blah_dir > run_pig_version.sh
 $ sh run_pig_version.sh
 
+# notes for aws emr
 $ elastic-mapreduce --create --name test_by3 --num-instances 3 --pig-script --step-name "11_solo" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=005 --args -p,output=006 --args s3n://matpalm/trending/run1/scripts/trending.pig
 
 $ elastic-mapreduce --jobflow j-240DHRM9K5YEP --pig-script --step-name "10_003" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=006 --args -p,output=007 --args s3n://matpalm/trending/run1/scripts/trending.pig
