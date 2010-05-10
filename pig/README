@@ -1,3 +1,9 @@
+
+
+# regenerate chunks
+$ source rc
+$ zcat /data/twitter/gardenhose/sample.* | head | extract_date_and_text.rb | split_into_chunks.rb
+
 to run ternding from ruby 
 $ ruby 2gram_trends.test.rb
 

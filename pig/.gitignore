@@ -1,5 +1,6 @@
 chunks
 pig/calc_min_trending.model*
 calc_min_trending.model*
-model.*
-trending.model.*
+model/*
+trending/*
+fft/*

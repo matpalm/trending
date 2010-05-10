@@ -1,5 +1,7 @@
 -- pig -x local -param model_in=model.00 -param model_out=model.01 -param next_chunk=2grams_over_day.test.part00 trending.pig
 
+%default piggybankjar piggybank.jar
+
 -- load sqrt and log10 functions
 register $piggybankjar
 --piggybank.jar;
@@ -9,14 +11,17 @@ register $piggybankjar
 -- load current model
 -- append 0 frequency as indicator of, potentially, not requiring update
 raw_model = load '$root_path/model/$input' as (key:chararray, n:int, m:double, ms:double);
---raw_model = load 's3n://matpalm/trending/run1/model/0001' as (key:chararray, n:int, m:double, ms:double);
---raw_model = load 's3://matpalm/test' as (n:int);
 model = foreach raw_model generate key, n, m, ms, 0 as f;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
 next_chunk = load '$root_path/chunks/$input';
-define ngramer `ruby ngram.rb` cache('$root_path/ngram.rb#ngram.rb');
-ngrams = stream next_chunk through ngramer as (key:chararray);
+define unigramer `ruby ngram.rb 1` cache('$root_path/ngram.rb#ngram.rb');
+define bigramer  `ruby ngram.rb 2` cache('$root_path/ngram.rb#ngram.rb');
+define trigramer `ruby ngram.rb 3` cache('$root_path/ngram.rb#ngram.rb');
+unigrams = stream next_chunk through unigramer as (key:chararray);
+bigrams  = stream next_chunk through bigramer as (key:chararray);
+trigrams = stream next_chunk through trigramer as (key:chararray);
+ngrams = union unigrams,bigrams,trigrams;
 ngrams_grouped = group ngrams by key;
 ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
 
@@ -40,7 +45,7 @@ model_n = foreach model_plus_seed2 generate
 frequent_first_time = filter model_n by n==0;
 key_f_fft = foreach frequent_first_time generate key,f;
 ordered_fft = order key_f_fft by f desc;
-top_fft = limit ordered_fft 20;
+top_fft = limit ordered_fft 100;
 store top_fft into '$root_path/fft/$input';
 
 -- now split into two relations; 
@@ -94,7 +99,7 @@ dump trending2_plus_dummy;
 
 -- sort, limit and store
 trending_sorted = order trending2_plus_dummy by normalised_trend_value desc;
-top_50 = limit trending_sorted 50;
+top_trending = limit trending_sorted 100;
 
 -- need to inject a dummy row, saving an empty relation cause grief. (PIG MR bug)
-store top_50 into '$root_path/trending/$input';
+store top_trending into '$root_path/trending/$input';

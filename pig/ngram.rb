@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-NGRAM_SIZE = 2
+NGRAM_SIZE = ARGV.length==1 ? ARGV.first.to_i : 2
 
 def emit tuple
   puts "#{tuple.join(" ")}"

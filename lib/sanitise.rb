@@ -18,6 +18,10 @@ class String
     gsub(/[\',]/,'').gsub(/[^a-z0-9&@#]/, ' ')
   end
   
+  def duplicate_punctionation_removed
+    gsub(/!+/,'!').gsub(/\.+/,'.')
+  end
+
   def duplicate_spaces_removed
     gsub(/\n/, ' ').gsub(/\s+/, ' ')
   end
@@ -30,6 +34,7 @@ class String
       #without_at_names.
       #with_amps_spaced.
       #without_punctionation.
+      duplicate_punctionation_removed.
       duplicate_spaces_removed.
       strip)
   end
