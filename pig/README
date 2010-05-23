@@ -1,3 +1,5 @@
+A Force - Crystal Dawn (Original Mix)
+
 
 --- ruby version
 # to run ternding from ruby 
@@ -19,7 +21,29 @@ $ bootstrap_dir.sh blah_dir
 $ gen_run_pig_version.rb blah_dir > run_pig_version.sh
 $ sh run_pig_version.sh
 
+################################################3
+# notes for cloudera distro
+
+see http://archive.cloudera.com/docs/_basic_usage.html for env vars and stuff
+
+$ hadoop-ec2 launch-master my-hadoop-cluster
+$ scp -i /home/mat/dev/ec2/security/id_rsa-gsg-keypair ~/dev/ec2/.s3cfg root@ec2-75-101-203-200.compute-1.amazonaws.com:
+$ scp -i /home/mat/dev/ec2/security/id_rsa-gsg-keypair ~/dev/trending/pig/trending.pig root@ec2-75-101-203-200.compute-1.amazonaws.com:
+
+% run on master
+alias hfs='hadoop fs'
+wget http://sourceforge.net/projects/s3tools/files/s3cmd/0.9.9.91/s3cmd-0.9.9.91.tar.gz/download
+tar zxf s3cmd-0.9.9.91.tar.gz
+export PATH=$PATH:~/s3cmd-0.9.9.91
+mkdir -p trending/{chunks,models,fft,trending}
+s3cmd get s3://matpalm/trending/run1/chunks/00* trending/chunks
+touch trending/model/000
+cp ngram.rb trending
+hfs -copyFromLocal trending/ trending
+
+################################################3
 # notes for aws emr
+
 $ elastic-mapreduce --create --name test_by3 --num-instances 3 --pig-script --step-name "11_solo" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=005 --args -p,output=006 --args s3n://matpalm/trending/run1/scripts/trending.pig
 
 $ elastic-mapreduce --jobflow j-240DHRM9K5YEP --pig-script --step-name "10_003" --args -p,piggybankjar=file:/home/hadoop/lib/pig/piggybank.jar --args -p,root_path=s3n://matpalm/trending/run1 --args -p,input=006 --args -p,output=007 --args s3n://matpalm/trending/run1/scripts/trending.pig
