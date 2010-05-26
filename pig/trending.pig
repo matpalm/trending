@@ -1,38 +1,33 @@
--- pig -x local -param model_in=model.00 -param model_out=model.01 -param next_chunk=2grams_over_day.test.part00 trending.pig
+-- EC2:   pig -p input=000 -p output=001 -p para=5 trending.pig
+-- LOCAL: pig -x local -p input=000 -p output=001 -p piggybankjar=/home/mat/dev/pig/piggybank.jar trending.pig
 
-%default piggybankjar piggybank.jar
+%default para 1;
+--%default piggybankjar /usr/lib/pig/contrib/piggybank/java/piggybank.jar
+%default piggybankjar /home/mat/dev/pig/piggybank.jar
 
--- load sqrt and log10 functions
 register $piggybankjar
---piggybank.jar;
---- for aws elastic map reduce
---register /home/hadoop/lib/pig/piggybank.jar;
 
 -- load current model
 -- append 0 frequency as indicator of, potentially, not requiring update
-raw_model = load '$root_path/model/$input' as (key:chararray, n:int, m:double, ms:double);
+raw_model = load 'trending/model/$input' as (key:chararray, n:int, m:double, ms:double);
 model = foreach raw_model generate key, n, m, ms, 0 as f;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
-next_chunk = load '$root_path/chunks/$input';
-define unigramer `ruby ngram.rb 1` cache('$root_path/ngram.rb#ngram.rb');
-define bigramer  `ruby ngram.rb 2` cache('$root_path/ngram.rb#ngram.rb');
-define trigramer `ruby ngram.rb 3` cache('$root_path/ngram.rb#ngram.rb');
-unigrams = stream next_chunk through unigramer as (key:chararray);
-bigrams  = stream next_chunk through bigramer as (key:chararray);
-trigrams = stream next_chunk through trigramer as (key:chararray);
-ngrams = union unigrams,bigrams,trigrams;
-ngrams_grouped = group ngrams by key;
+next_chunk = load 'trending/chunks/$input';
+define ngramer `ruby ngram.rb 3 include_shorter` cache('trending/ngram.rb#ngram.rb');
+ngrams = stream next_chunk through ngramer as (key:chararray);
+ngrams_grouped = group ngrams by key PARALLEL $para;
 ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
+--store ngram_freq into 'ngram_freq';
 
 -- generate a seed list of keys for next chunk as we might not have seen some of these entries before
 seed_values = foreach ngram_freq generate key, 0 as n, 0.0 as m, 0.0 as ms, f;
 
 -- union seed values with model 
 -- this is clumsy as it relies on MAX to decide the 'correct' values for each field. urgh.
--- all this because we cant do outer joins in pig 0.3.0 (todo: try with pig 0.5, cloudera cdh2?)
+-- TODO: since upgrading to pig 0.5 this can now be an outer join
 model_plus_seed = union model, seed_values;
-model_plus_seed2 = group model_plus_seed by key;
+model_plus_seed2 = group model_plus_seed by key PARALLEL $para;
 model_n = foreach model_plus_seed2 generate 
 	group as key, 
 	MAX(model_plus_seed.n) as n,
@@ -44,9 +39,9 @@ model_n = foreach model_plus_seed2 generate
 -- that are occuring for the first time
 frequent_first_time = filter model_n by n==0;
 key_f_fft = foreach frequent_first_time generate key,f;
-ordered_fft = order key_f_fft by f desc;
-top_fft = limit ordered_fft 100;
-store top_fft into '$root_path/fft/$input';
+ordered_fft = order key_f_fft by f desc PARALLEL $para;
+top_fft = limit ordered_fft 100 PARALLEL $para;
+store top_fft into 'trending/fft/$input';
 
 -- now split into two relations; 
 -- one requiring update (current for this round)
@@ -67,7 +62,7 @@ updated = foreach to_update {
 -- store this model for next time
 -- (includes freq but will be dropped by next load)
 model_n1 = union updated, not_to_update;
-store model_n1 into '$root_path/model/$output';
+store model_n1 into 'trending/model/$output';
 
 -- filter out to only include those that could be trending 
 -- (ie have more than one record; ie those that have been seen before this chunk)
@@ -92,14 +87,7 @@ trending2 = foreach trending {
 	generate key, min_trend_value, percent_over_trend, normalised_trend_value as normalised_trend_value;
 }
 
--- workaround for pig bug re: sorting empty relation
-trending_dummy = load '$root_path/trending/dummy' as (key:chararray, n:int, m:double, ms:double);
-trending2_plus_dummy = union trending2, trending_dummy;
-dump trending2_plus_dummy;
-
 -- sort, limit and store
-trending_sorted = order trending2_plus_dummy by normalised_trend_value desc;
-top_trending = limit trending_sorted 100;
-
--- need to inject a dummy row, saving an empty relation cause grief. (PIG MR bug)
-store top_trending into '$root_path/trending/$input';
+trending_sorted = order trending2 by normalised_trend_value desc PARALLEL $para;
+top_trending = limit trending_sorted 100 PARALLEL $para;
+store top_trending into 'trending/trending/$input';
