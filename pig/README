@@ -26,20 +26,26 @@ $ sh run_pig_version.sh
 
 see http://archive.cloudera.com/docs/_basic_usage.html for env vars and stuff
 
-$ hadoop-ec2 launch-master my-hadoop-cluster
-$ scp -i /home/mat/dev/ec2/security/id_rsa-gsg-keypair ~/dev/ec2/.s3cfg root@ec2-75-101-203-200.compute-1.amazonaws.com:
-$ scp -i /home/mat/dev/ec2/security/id_rsa-gsg-keypair ~/dev/trending/pig/trending.pig root@ec2-75-101-203-200.compute-1.amazonaws.com:
+$ hadoop-ec2 launch-cluster my-hadoop-cluster 1
+$ export MASTER=ec2-75-101-203-200.compute-1.amazonaws.com
+$ scp -i /home/mat/dev/ec2/security/id_rsa-gsg-keypair ~/dev/ec2/.s3cfg ~/dev/trending/pig/{trending.pig,ngram.rb} root@$MASTER:
 
 % run on master
+$ ssh_ec2 $MASTER
+# setup values in /usr/lib/hadoop-0.20/conf/hadoop-site.xml
 alias hfs='hadoop fs'
 wget http://sourceforge.net/projects/s3tools/files/s3cmd/0.9.9.91/s3cmd-0.9.9.91.tar.gz/download
 tar zxf s3cmd-0.9.9.91.tar.gz
 export PATH=$PATH:~/s3cmd-0.9.9.91
-mkdir -p trending/{chunks,models,fft,trending}
-s3cmd get s3://matpalm/trending/run1/chunks/00* trending/chunks
+mkdir -p trending/{chunks,model,fft,trending}
 touch trending/model/000
 cp ngram.rb trending
 hfs -copyFromLocal trending/ trending
+hfs -cp s3n://matpalm/trending/run1/chunks/* trending/chunks/ # todo: as mr job as described at end of hadoop book
+
+
+
+
 
 ################################################3
 # notes for aws emr
