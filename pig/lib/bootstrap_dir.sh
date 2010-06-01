@@ -9,5 +9,5 @@ touch model/000
 ln -s ../chunks.full chunks
 cp ../ngram.rb .
 cd ..
-gen_run_pig_version.rb > run_pig_version.sh
-echo "now run: run_pig_version.sh"
+gen_run_iterations.rb > run_iterations.sh
+echo "now run: run_iterations.sh"

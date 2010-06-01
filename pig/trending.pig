@@ -1,16 +1,17 @@
--- EC2:   pig -p input=000 -p output=001 -p para=5 trending.pig
--- LOCAL: pig -x local -p input=000 -p output=001 -p piggybankjar=/home/mat/dev/pig/piggybank.jar trending.pig
+-- see run_iter.rb which builds a command line to calling this script..
 
-%default para 1;
---%default piggybankjar /usr/lib/pig/contrib/piggybank/java/piggybank.jar
-%default piggybankjar /home/mat/dev/pig/piggybank.jar
+-- when building inital model (precull) use a cull value of 0
+-- EC2:   pig -p input=000 -p cull=0 -p output=001 -p para=5 trending.pig
+-- LOCAL: pig -x local -p input=000 -p cull=0 -p output=001 -p piggybankjar=/home/mat/dev/pig/piggybank.jar trending.pig
+-- once past the culling point (say 10 iterations) use a cull value of input - culling_period
+-- EC2:   pig -p input=015 -p cull=5 -p output=016 -p para=5 trending.pig
 
 register $piggybankjar
 
 -- load current model
+raw_model = load 'trending/model/$input' as (key:chararray, n:int, m:double, ms:double, last_seen:int);
 -- append 0 frequency as indicator of, potentially, not requiring update
-raw_model = load 'trending/model/$input' as (key:chararray, n:int, m:double, ms:double);
-model = foreach raw_model generate key, n, m, ms, 0 as f;
+model = foreach raw_model generate key, n, m, ms, last_seen, 0 as f;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
 next_chunk = load 'trending/chunks/$input';
@@ -21,19 +22,26 @@ ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
 --store ngram_freq into 'ngram_freq';
 
 -- generate a seed list of keys for next chunk as we might not have seen some of these entries before
-seed_values = foreach ngram_freq generate key, 0 as n, 0.0 as m, 0.0 as ms, f;
+-- inject the 'input' value for 'last_seen' to keep the ngram "alive"
+seed_values = foreach ngram_freq generate key, 0 as n, 0.0 as m, 0.0 as ms, $input, f;
 
 -- union seed values with model 
 -- this is clumsy as it relies on MAX to decide the 'correct' values for each field. urgh.
--- TODO: since upgrading to pig 0.5 this can now be an outer join
+-- TODO: since upgrading to pig 0.5 can this be done in a cleaner fashion with an outer join
 model_plus_seed = union model, seed_values;
 model_plus_seed2 = group model_plus_seed by key PARALLEL $para;
-model_n = foreach model_plus_seed2 generate 
+model_n_before_cull = foreach model_plus_seed2 generate 
 	group as key, 
 	MAX(model_plus_seed.n) as n,
 	MAX(model_plus_seed.m) as m,
 	MAX(model_plus_seed.ms) as ms,
+	MAX(model_plus_seed.last_seen) as last_seen,
 	MAX(model_plus_seed.f) as f;
+--dump model_n_before_cull;
+
+-- drop items from model that are too old
+model_n = filter model_n_before_cull by last_seen >= $cull;
+--dump model_n;
 
 -- dump the top20 items by frequency
 -- that are occuring for the first time
@@ -56,7 +64,7 @@ split model_n into to_update if f>0, not_to_update if f==0;
 updated = foreach to_update {
 	m2  = ((n*m)+f)/(n+1);
 	ms2 = ((n*ms)+(f*f))/(n+1);
-	generate key, n+1 as n, m2 as m, ms2 as ms, f;
+	generate key, n+1 as n, m2 as m, ms2 as ms, last_seen, f;
 }
 
 -- store this model for next time
