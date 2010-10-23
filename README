@@ -9,3 +9,9 @@ then see lib/run.sh for the end to end script to build all the data for generati
 ro run pig version
 cd pig
 cat run.sh for info
+
+-- todo's from hackday
+
+1) converting trending value = fraction of sd over mean worked well, need to formalise it and fold into normal version
+2) need a way to properly handle the fft values. perhaps they can have an estimate mean and sd based on all terms so far and trend off that?
+3) granularity problem (is there enough day to trend per hour? or have to do to day) can be solved by a sliding window approach. we keep so mean/sd calcs on a days worth of day and just fold in newest hour and fold out oldest hour to update the value.
