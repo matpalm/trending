@@ -1,32 +1,33 @@
 #!/usr/bin/env ruby
 
-ITERATIONS_UNTIL_NGRAM_EXPIRES = 10
-
 def on_ec2
   return @on_ec2 unless @on_ec2.nil?
   @on_ec2 = (!!(`hostname` =~ /amazon/))
 end
 
-def three_digits n
-  sprintf("%03d",n)
+class Fixnum
+  def as_3digits
+    sprintf("%03d",self)
+  end
+end
+
+def piggybank_jar_location
+  on_ec2 ? '/usr/lib/pig/contrib/piggybank/java/piggybank.jar' : '/home/mat/dev/trending/pig/piggybank.jar' 
+end
+
+def parallel_level
+  on_ec2 ? 5 : 1
 end
 
 def cmd_for_iter n
-  cull = n - ITERATIONS_UNTIL_NGRAM_EXPIRES
-  cull = 0 if cull<0
-  
-  para = on_ec2 ? 5 : 1
-  
-  piggybank_jar = on_ec2 ? '/usr/lib/pig/contrib/piggybank/java/piggybank.jar' : '/home/mat/dev/trending/pig/piggybank.jar' 
-  
-  cmd = "time pig -x local"
-  cmd += " -p input=#{three_digits(n)}"
-  cmd += " -p output=#{three_digits(n+1)}"
-  cmd += " -p cull=#{cull}"
-  cmd += " -p para=#{para}"
-  cmd += " -p piggybankjar=#{piggybank_jar}"
-  cmd += " trending.pig"
-  
+  cmd = "time pig"
+  cmd << " -x local" if !on_ec2
+  cmd << " -p iter=#{n}"
+  cmd << " -p input=#{n.as_3digits}"
+  cmd << " -p output=#{(n+1).as_3digits}"
+  cmd << " -p pbjar=#{piggybank_jar_location}"
+  cmd << " -p para=#{parallel_level}"
+  cmd << " trending.pig"
   cmd
 end
 

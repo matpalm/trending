@@ -5,4 +5,4 @@ calc_min_trending.model*
 model/*
 trending/*
 fft/*
-run_iterations.sh
+run_pig_version.sh
