@@ -7,7 +7,7 @@ cd data
 mkdir {model,fft,trending,debug}
 touch model/000 
 ln -s ../chunks chunks
-cp ../ngram.rb .
+cp ../ngram.{rb,py} .
 cd ..
 gen_run_iterations.rb > run_iterations.sh
 echo "now run: run_iterations.sh"
