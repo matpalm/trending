@@ -1,0 +1,9 @@
+really hacky script to dump tt posts
+$ extract_posts.rb > tt.posts.tsv
+
+convert from output of extract_posts.rb into whatever tuple is interesting...
+$ zcat tt.posts.tsv.gz | head | ./extract_body.rb > chunks.tsv
+
+
+
+
