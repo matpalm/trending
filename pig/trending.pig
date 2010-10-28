@@ -19,6 +19,7 @@ define ngramer `ruby ngram.rb 3 include_shorter` cache('data/ngram.rb#ngram.rb')
 ngrams = stream next_chunk through ngramer as (key:chararray);
 ngrams_grouped = group ngrams by key PARALLEL $para;
 chunk = foreach ngrams_grouped generate group as token, SIZE(ngrams) as freq;
+store chunk into 'data/debug/chunk_$input';
 
 -- model with 0 values for previously not seen items from chunks
 model_seed = foreach chunk generate token, freq as freq, (float)0 as mean, (float)0 as mean_sqrs;

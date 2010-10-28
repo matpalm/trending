@@ -6,7 +6,7 @@ def on_ec2
 end
 
 class Fixnum
-  def as_3digits
+  def as3digits
     sprintf("%03d",self)
   end
 end
@@ -19,16 +19,32 @@ def parallel_level
   on_ec2 ? 5 : 1
 end
 
+def files_to_clean_for_iter n
+  ["data/model/#{(n+1).as3digits}",
+   "data/trending/#{n.as3digits}",
+   "data/debug/chunk_#{n.as3digits}"
+  ]
+end
+
 def cmd_for_iter n
-  cmd = "time pig"
+  cmd = "pig"
   cmd << " -x local" if !on_ec2
   cmd << " -p iter=#{n}"
-  cmd << " -p input=#{n.as_3digits}"
-  cmd << " -p output=#{(n+1).as_3digits}"
+  cmd << " -p input=#{n.as3digits}"
+  cmd << " -p output=#{(n+1).as3digits}"
   cmd << " -p pbjar=#{piggybank_jar_location}"
   cmd << " -p para=#{parallel_level}"
   cmd << " trending.pig"
   cmd
 end
 
-puts cmd_for_iter ARGV.first.to_i if ARGV.length==1
+def run cmd
+  puts "$ #{cmd}"
+  puts `#{cmd}`
+end
+
+if ARGV.length==1
+  N = ARGV.first.to_i
+  files_to_clean_for_iter(N).each { |file| run "rm #{file}" }
+  run cmd_for_iter(N)
+end

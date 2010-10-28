@@ -4,7 +4,7 @@ if [ -d data ]; then
 fi 
 mkdir -p data
 cd data
-mkdir {model,fft,trending}
+mkdir {model,fft,trending,debug}
 touch model/000 
 ln -s ../chunks chunks
 cp ../ngram.rb .
