@@ -1,8 +1,4 @@
 chunks
 pig*log
-pig/calc_min_trending.model*
-calc_min_trending.model*
-model/*
-trending/*
-fft/*
+data
 run_pig_version.sh
