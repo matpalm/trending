@@ -1,11 +1,4 @@
--- see run_iter.rb which builds a command line to calling this script..
-
--- when building inital model (precull) use a cull value of 0
--- EC2:   pig -p input=000 -p cull=0 -p output=001 -p para=5 trending.pig
--- LOCAL: pig -x local -p input=000 -p cull=0 -p output=001 -p piggybankjar=/home/mat/dev/pig/piggybank.jar trending.pig
--- once past the culling point (say 10 iterations) use a cull value of input - culling_period
--- EC2:   pig -p input=015 -p cull=5 -p output=016 -p para=5 trending.pig
-
+-- see lib/run_iteration.rb which builds a command line to call this script
 register $pbjar
 
 -- load current model
