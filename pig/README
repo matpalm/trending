@@ -15,8 +15,11 @@ TODOS:
   - first as a single step as part of split into chunks
   - then as first step on chunk before ngramming
  - move the split into chunks responsibility into pig too
+ - how to facet trends with an arbitrary key?
+  - eg trends per forum
+ - link back from trend to document (ie build an index during early chunk phase)
 
-################################################3
+################################################
 # notes for cloudera distro
 
 see http://archive.cloudera.com/docs/_basic_usage.html for env vars and stuff

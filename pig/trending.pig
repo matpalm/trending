@@ -6,96 +6,51 @@
 -- once past the culling point (say 10 iterations) use a cull value of input - culling_period
 -- EC2:   pig -p input=015 -p cull=5 -p output=016 -p para=5 trending.pig
 
-register $piggybankjar
+register $pbjar
 
 -- load current model
-raw_model = load 'trending/model/$input' as (key:chararray, n:int, m:double, ms:double, last_seen:int);
--- append 0 frequency as indicator of, potentially, not requiring update
-model = foreach raw_model generate key, n, m, ms, last_seen, 0 as f;
+raw_model = load 'data/model/$input' as (token:chararray, mean:float, mean_sqrs:float);
+model_n = foreach raw_model generate token, (float)0 as freq, mean, mean_sqrs;
 
 -- load next chunk, expect a single field of text and build frequency table of ngrams
-next_chunk = load 'trending/chunks/$input';
-define ngramer `ruby ngram.rb 3 include_shorter` cache('trending/ngram.rb#ngram.rb');
+-- load next chunk, expect a single field of text and build frequency table of ngrams
+next_chunk = load 'data/chunks/$input';
+define ngramer `ruby ngram.rb 3 include_shorter` cache('data/ngram.rb#ngram.rb');
 ngrams = stream next_chunk through ngramer as (key:chararray);
 ngrams_grouped = group ngrams by key PARALLEL $para;
-ngram_freq = foreach ngrams_grouped generate group as key, SIZE(ngrams) as f;
---store ngram_freq into 'ngram_freq';
+chunk = foreach ngrams_grouped generate group as token, SIZE(ngrams) as freq;
 
--- generate a seed list of keys for next chunk as we might not have seen some of these entries before
--- inject the 'input' value for 'last_seen' to keep the ngram "alive"
-seed_values = foreach ngram_freq generate key, 0 as n, 0.0 as m, 0.0 as ms, $input, f;
+-- model with 0 values for previously not seen items from chunks
+model_seed = foreach chunk generate token, freq as freq, (float)0 as mean, (float)0 as mean_sqrs;
+model_plus_seed = union model_n, model_seed;
+model_plus_seed2 = group model_plus_seed by token PARALLEL $para;
+-- clumsy but works, each field can be calc'd (correctly, mind you) by max!
+model_n_with_chunk = foreach model_plus_seed2 generate 
+       group as token, 
+       MAX(model_plus_seed.freq) as freq,
+       MAX(model_plus_seed.mean) as mean,
+       MAX(model_plus_seed.mean_sqrs) as mean_sqrs;
 
--- union seed values with model 
--- this is clumsy as it relies on MAX to decide the 'correct' values for each field. urgh.
--- TODO: since upgrading to pig 0.5 can this be done in a cleaner fashion with an outer join
-model_plus_seed = union model, seed_values;
-model_plus_seed2 = group model_plus_seed by key PARALLEL $para;
-model_n_before_cull = foreach model_plus_seed2 generate 
-	group as key, 
-	MAX(model_plus_seed.n) as n,
-	MAX(model_plus_seed.m) as m,
-	MAX(model_plus_seed.ms) as ms,
-	MAX(model_plus_seed.last_seen) as last_seen,
-	MAX(model_plus_seed.f) as f;
---dump model_n_before_cull;
+-- generate new mean and mean of squares
+model_n1_with_freq = foreach model_n_with_chunk {
+       mean2  = (($iter*mean)+freq)/($iter+1);
+       mean_sqrs2 = (($iter*mean_sqrs)+(freq*freq))/($iter+1);
+       generate token, freq, mean2 as mean, mean_sqrs2 as mean_sqrs;
+}      		       	     	      	    	       
+model_n1 = foreach model_n1_with_freq generate token,mean,mean_sqrs;
+-- TODO: cull values who's mean has dropped below a set threshold
+store model_n1 into 'data/model/$output';
 
--- drop items from model that are too old
-model_n = filter model_n_before_cull by last_seen >= $cull;
---dump model_n;
-
--- dump the top20 items by frequency
--- that are occuring for the first time
-frequent_first_time = filter model_n by n==0;
-key_f_fft = foreach frequent_first_time generate key,f;
-ordered_fft = order key_f_fft by f desc PARALLEL $para;
-top_fft = limit ordered_fft 100 PARALLEL $para;
-store top_fft into 'trending/fft/$input';
-
--- now split into two relations; 
--- one requiring update (current for this round)
--- the other to pass through (no contribu from this round)
-split model_n into to_update if f>0, not_to_update if f==0;
-
--- generate n+1 model
--- note because of pig bug https://issues.apache.org/jira/browse/PIG-747
--- we need to update m, ms in one step and sd (which relies on new m, ms values) in another step
--- also ? is not short circuited so had to use n+0.000001 for denom since rhs is evaled
--- even when n==0
-updated = foreach to_update {
-	m2  = ((n*m)+f)/(n+1);
-	ms2 = ((n*ms)+(f*f))/(n+1);
-	generate key, n+1 as n, m2 as m, ms2 as ms, last_seen, f;
-}
-
--- store this model for next time
--- (includes freq but will be dropped by next load)
-model_n1 = union updated, not_to_update;
-store model_n1 into 'trending/model/$output';
-
--- filter out to only include those that could be trending 
--- (ie have more than one record; ie those that have been seen before this chunk)
-requiring_trending_check = filter updated by n>1;
-
--- calculate trending scores
-calc_min_trending = foreach requiring_trending_check {
-	sd_lhs = n * ms;
-	sd_rhs = n * (m*m);	
-	sd = org.apache.pig.piggybank.evaluation.math.SQRT((sd_lhs-sd_rhs)/n);
-	min_trend_value = m + (2*sd);
-	generate key, f, m as mean, sd as std_dev, min_trend_value as min_trend_value, f / min_trend_value as percent_over_trend;
-}
-
--- filter those with a positive trending percentage
-trending = filter calc_min_trending by percent_over_trend > 1;
-
--- scale by log of frequency to get final score
--- todo: not sure if this worth doing?
-trending2 = foreach trending {
-	normalised_trend_value = org.apache.pig.piggybank.evaluation.math.LOG10(f) * percent_over_trend;
-	generate key, min_trend_value, percent_over_trend, normalised_trend_value as normalised_trend_value;
-}
-
--- sort, limit and store
-trending_sorted = order trending2 by normalised_trend_value desc PARALLEL $para;
+-- calculate trending		      
+possibly_trending = filter model_n1_with_freq by freq>0;      
+trending = foreach possibly_trending {
+	 sd_lhs = $iter * mean_sqrs;
+	 sd_rhs = $iter * (mean*mean);
+	 sd = ( $iter==0 ? 0 : org.apache.pig.piggybank.evaluation.math.SQRT((sd_lhs-sd_rhs)/$iter) );
+	 fraction_of_sd_over_mean = ( sd==0 ? 0 : (freq-mean)/sd);
+--	 generate token, freq, mean, sd as sd, fraction_of_sd_over_mean as trending_score;  
+	 generate token, fraction_of_sd_over_mean as trending_score;  
+};
+trending_sorted = order trending by trending_score desc PARALLEL $para;
 top_trending = limit trending_sorted 100 PARALLEL $para;
-store top_trending into 'trending/trending/$input';
+store top_trending into 'data/trending/$input';
