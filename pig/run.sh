@@ -10,7 +10,8 @@ mkdir chunks
 cat cheese_tweets.tsv | split_into_chunks.rb
 
 # generate script to run pig jobs
-gen_run_iterations.rb > run_pig_version.sh
+gen_run_iterations.rb > run_iterations.sh
 
 # run it!
+bootstrap_dir.sh
 run_pig_version.sh

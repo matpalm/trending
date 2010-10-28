@@ -1,4 +1,4 @@
 chunks
 pig*log
-data
-run_pig_version.sh
+data*
+run_iterations.sh

@@ -1,5 +1,3 @@
-A Force - Crystal Dawn (Original Mix)
-
 
 --- ruby version
 # to run ternding from ruby 
@@ -9,17 +7,14 @@ $ 2gram_trends.test.rb
 
 --- pig version
 
-# regenerate chunks; each corresponds to an hours worth of tweets
-$ cd trending/pig
-$ source rc
-$ zcat /data/twitter/gardenhose/cheese.20100*gz | extract_date_and_text.rb 2>/dev/null | split_into_chunks.rb
+see run.sh
 
-# to run trending from pig (wip)
-$ bootstrap_dir.sh blah_dir
-
-# and then generate a runmany script
-$ gen_run_pig_version.rb blah_dir > run_pig_version.sh
-$ sh run_pig_version.sh
+TODOS:
+ - cull values with mean under some small threshold
+ - run through nltk for tokenization first before running ngrammer 
+  - first as a single step as part of split into chunks
+  - then as first step on chunk before ngramming
+ - move the split into chunks responsibility into pig too
 
 ################################################3
 # notes for cloudera distro
