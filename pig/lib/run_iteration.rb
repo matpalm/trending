@@ -27,7 +27,7 @@ def files_to_clean_for_iter n
 end
 
 def cmd_for_iter n
-  cmd = "pig"
+  cmd = "time pig"
   cmd << " -x local" if !on_ec2
   cmd << " -p iter=#{n}"
   cmd << " -p input=#{n.as3digits}"
@@ -45,6 +45,6 @@ end
 
 if ARGV.length==1
   N = ARGV.first.to_i
-  files_to_clean_for_iter(N).each { |file| run "rm #{file}" }
+  run "rm #{files_to_clean_for_iter(N).join(' ')}"
   run cmd_for_iter(N)
 end

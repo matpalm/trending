@@ -12,7 +12,8 @@ define ngramer `python ngram.py` cache('data/ngram.py#ngram.py');
 ngrams = stream next_chunk through ngramer as (key:chararray);
 ngrams_grouped = group ngrams by key PARALLEL $para;
 chunk = foreach ngrams_grouped generate group as key, SIZE(ngrams) as freq;
-store chunk into 'data/debug/chunk_$input';
+chunk_debug = order chunk by freq desc;
+store chunk_debug into 'data/debug/chunk_$input';
 
 -- model with 0 values for previously not seen items from chunks
 model_seed = foreach chunk generate key, freq as freq, (float)0 as mean, (float)0 as mean_sqrs;
@@ -43,8 +44,9 @@ trending = foreach possibly_trending {
 	 sd = ( $iter==0 ? 0 : org.apache.pig.piggybank.evaluation.math.SQRT((sd_lhs-sd_rhs)/$iter) );
 	 fraction_of_sd_over_mean = ( sd==0 ? 0 : (freq-mean)/sd);
 --	 generate key, freq, mean, sd as sd, fraction_of_sd_over_mean as trending_score;  
-	 generate key, fraction_of_sd_over_mean as trending_score;  
+	 generate key, (float)fraction_of_sd_over_mean as trending_score;  
 };
 trending_sorted = order trending by trending_score desc PARALLEL $para;
-top_trending = limit trending_sorted 100 PARALLEL $para;
-store top_trending into 'data/trending/$input';
+store trending_sorted into 'data/trending/$input';
+--top_trending = limit trending_sorted 500 PARALLEL $para;
+--store top_trending into 'data/trending/$input';

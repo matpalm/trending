@@ -19,6 +19,16 @@ TODOS:
   - eg trends per forum
  - link back from trend to document (ie build an index during early chunk phase)
 
+---- for the thorntree hackday version
+
+$ source rc
+
+# need to sort by time, not id, since that's how we bucket into the timeslots
+$ zcat ../tt/tt.posts.tsv.gz | head -n1000 | sort -t$'\t' -k2 -n | ../tt/extract_body.rb | split_into_chunks.rb
+
+$ run_iteration.rb 0
+
+
 ################################################
 # notes for cloudera distro
 
