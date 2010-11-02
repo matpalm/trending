@@ -3,7 +3,7 @@ require "#{File.dirname(__FILE__)}/timeslots.rb"
 current_slot = nil
 current_file = nil
 
-timeslots = TimeSlots.new 1.hours
+timeslots = TimeSlots.new 24.hours
 STDIN.each do |line|
   datetime, text = line.chomp.split("\t")
   slot = timeslots.timeslot_since_epoch(datetime)

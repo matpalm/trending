@@ -29,7 +29,6 @@ end
 def cmd_for_iter n
   cmd = "time pig"
   cmd << " -x local" if !on_ec2
-  cmd << " -p iter=#{n}"
   cmd << " -p input=#{n.as3digits}"
   cmd << " -p output=#{(n+1).as3digits}"
   cmd << " -p pbjar=#{piggybank_jar_location}"
