@@ -1,43 +1,4 @@
 
---- ruby version
-# to run ternding from ruby 
-$ cd trending
-$ source rc
-$ 2gram_trends.test.rb
-
---- pig version
-
-see run.sh
-
-TODOS:
-- do trending check BEFORE folding into model
-eg the case below of files the sd was updated to 8 before trending check was done.
-
-mat@ubishop:~/dev/trending/pig/data$ grep -P "^files\t" debug/chunk_00*
-debug/chunk_000:files		     1
-debug/chunk_001:files		     1
-debug/chunk_002:files		     3
-debug/chunk_003:files		     1
-debug/chunk_004:files		     3
-debug/chunk_005:files		     4
-debug/chunk_006:files		     27
-
- - move the split into chunks responsibility into pig too
- - how to facet trends with an arbitrary key?
-  - eg trends per forum
- - link back from trend to document (ie build an index during early chunk phase)
- - cull values with mean under some small threshold (not sure if good idea)
-
----- for the thorntree hackday version
-
-$ source rc
-
-# need to sort by time, not id, since that's how we bucket into the timeslots
-$ zcat ../tt/tt.posts.tsv.gz | head -n1000 | sort -t$'\t' -k2 -n | ../tt/extract_body.rb | split_into_chunks.rb
-
-$ run_iteration.rb 0
-
-
 ################################################
 # notes for cloudera distro
 

@@ -5,8 +5,8 @@ current_file = nil
 
 timeslots = TimeSlots.new 24.hours
 STDIN.each do |line|
-  datetime, text = line.chomp.split("\t")
-  slot = timeslots.timeslot_since_epoch(datetime)
+  epoch_time, text = line.chomp.split("\t")
+  slot = timeslots.timeslot_since_epoch(epoch_time.to_i)
   if (slot != current_slot)
     current_file.close if current_file    
     current_slot = slot

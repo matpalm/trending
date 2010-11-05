@@ -8,5 +8,5 @@ STDIN.each do |line|
   body = body.sanitise
 
 #  puts "#{msg_id}\t#{creation_date}\t#{body}\t#{place}" unless body.empty?
-  puts "#{Time.at(creation_date.to_i/1000)}\t#{body}" unless body.empty?
+  puts "#{creation_date.to_i/1000}\t#{body}" unless body.empty?
 end

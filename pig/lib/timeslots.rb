@@ -21,15 +21,9 @@ class TimeSlots
     @bucket_size = bucket_size_in_seconds
   end
 
-  def timeslot_since_epoch datetime_string
-    begin
-      datetime = DateTime.parse(datetime_string)
-    rescue Exception => e
-      STDERR.puts "invalid datestring? [#{datetime_string}]"
-    end   
-    @epoch ||= datetime
-    days_since_epoch = datetime - @epoch
-    seconds_since_epoch = days_since_epoch * 24.hours
+  def timeslot_since_epoch epoch_time
+    @epoch ||= epoch_time
+    seconds_since_epoch = epoch_time - @epoch
     (seconds_since_epoch / @bucket_size).to_i   
   end
 
