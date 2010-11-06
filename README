@@ -10,8 +10,8 @@ TODOS:
 
 DATA PREP:
 
-# need to sort by time, not id, since that's how we bucket into the timeslots
-$ zcat ../tt/tt.posts.tsv.gz | head -n1000 | sort -t$'\t' -k2 -n | ../tt/extract_body.rb | split_into_chunks.rb
+# cd pig
+$ cat ../tt/tt.posts.sortedbyid.tsv | head -n1000 | ../tt/extract_body.rb | split_into_chunks.rb
 
 v1)
 

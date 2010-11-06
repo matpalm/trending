@@ -7,6 +7,5 @@ STDIN.each do |line|
   msg_id, creation_date, body, place = line.split("\t")
   body = body.sanitise
 
-#  puts "#{msg_id}\t#{creation_date}\t#{body}\t#{place}" unless body.empty?
-  puts "#{creation_date.to_i/1000}\t#{body}" unless body.empty?
+  puts [creation_date.to_i/1000, msg_id, body].join("\t") unless body.empty?
 end
