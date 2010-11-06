@@ -11,9 +11,11 @@ next_chunk = load 'data/chunks/$input';
 
 -- tokenize chunk
 define tokenizer `python tokenizer.py` cache('data/tokenizer.py#tokenizer.py');
-tokens = stream next_chunk through tokenizer as (token:chararray);
-tokens_grouped = group tokens by token PARALLEL $para;
-chunk = foreach tokens_grouped generate group as token, SIZE(tokens) as freq;
+tokens = stream next_chunk through tokenizer as (doc_id:int, token:chararray);
+distinct_tokens = distinct tokens;
+just_tokens = foreach distinct_tokens generate token as token;
+tokens_grouped = group just_tokens by token PARALLEL $para;
+chunk = foreach tokens_grouped generate group as token, SIZE(just_tokens) as freq;
 
 --chunk_debug = order chunk by freq desc;
 store chunk into 'data/debug/chunk_$input';

@@ -12,10 +12,9 @@ sys.stderr = codecs.getwriter(locale.getpreferredencoding())(sys.stderr)
 def not_single_char(token): return len(token) > 1
 
 for line in sys.stdin.readlines():
-    for sentence in sent_tokenizer.tokenize(line):
+    id, text = line.split("\t")
+    for sentence in sent_tokenizer.tokenize(text):
         for token in token_tokenizer.tokenize(sentence):
             if not_single_char(token):
-                print token
-
-
+                print "\t".join([id,token])
 
