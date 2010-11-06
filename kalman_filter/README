@@ -1,0 +1,20 @@
+
+-------------------------------------------
+-- generate some random points around 10
+
+R> x <- rnorm(100, 10.0, 4)
+R> write(x,'observations', sep="\n")
+
+-------------------------------------------
+-- run through filter
+
+$ ./kalman.rb < observations > predicted
+
+-------------------------------------------
+-- plot together
+
+R> observations = read.delim('observations', header=FALSE)
+R> predicted_values = read.delim('predicted', header=FALSE)
+R> plot(observations$V1, type='p', col='red')
+R> points(predicted_values$V1, type='p', col='blue')
+R> abline(h=10, col='green')
