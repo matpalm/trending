@@ -1,11 +1,12 @@
 trying out some simple trending algorithms
 
-notes on http://matpalm.com/blog/tags/e15
+notes on http://matpalm.com/blog/tag/e15
 
 TODOS:
+ - inverted index from trending terms back to the documents that use them
  - ability to facet; ie trends per forum as well as overall trends
  - include ignore_punc.rb; (eg ["can","'","t"] -> ["can't"]
-
+ - only count term once per document (?)
 
 DATA PREP:
 
@@ -26,7 +27,7 @@ cat run.sh for info
 
 trending score = fraction over twice sd
 
-v2)
+v3a)
 
 combination; start considering tokens when they are first seen but from then if token is not seen then
 assume zero value for that timeslice
@@ -37,4 +38,9 @@ consider trending value BEFORE folding chunk into model
 (makes huge difference to 1,2,3,2,2,3,4,20 style cases)
 
 trending score = fraction of sd over the mean
+
+if token appears n times in a single document it counts for n in chunk;
+deciding if need to change this to counting for 1 per chunk (since cases of a post like 'shut up shut up shut up shut up shut up shut up' cause grief
+perhaps tf/idf would be better actually...
+
 
