@@ -4,7 +4,7 @@ if [ -d data ]; then
 fi 
 mkdir -p data
 cd data
-mkdir {model,trending,debug}
+mkdir {model,trending,trending_docs,debug}
 touch model/000 
 ln -s ../chunks chunks
 cp ../*{rb,py} .

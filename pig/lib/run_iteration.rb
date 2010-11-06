@@ -22,6 +22,7 @@ end
 def files_to_clean_for_iter n
   ["data/model/#{(n+1).as3digits}",
    "data/trending/#{n.as3digits}",
+   "data/trending_docs/#{n.as3digits}",
    "data/debug/*#{n.as3digits}"
   ]
 end
