@@ -38,6 +38,7 @@ class String
   end
 
   def duplicate_spaces_removed
+    gsub(" ",' '). # annoying unicode line break U+2028
     gsub("\r",' ').gsub("/n",' ').gsub("\t",' ').gsub(/\s+/,' ')
   end
 
