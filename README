@@ -3,10 +3,8 @@ trying out some simple trending algorithms
 notes on http://matpalm.com/blog/tag/e15
 
 TODOS:
- - inverted index from trending terms back to the documents that use them
  - ability to facet; ie trends per forum as well as overall trends
  - include ignore_punc.rb; (eg ["can","'","t"] -> ["can't"]
- - only count term once per document (?)
 
 DATA PREP:
 

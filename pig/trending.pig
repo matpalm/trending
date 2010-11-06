@@ -49,21 +49,24 @@ trending = foreach in_both_flat {
 	 sd_rhs = num_occurences * (mean*mean);
 	 sd = sqrt( (sd_lhs-sd_rhs) / num_occurences ); 
 	 fraction_of_sd_over_mean = ( sd==0 ? 0 : (freq-mean)/sd );
-	 generate model::token as token, fraction_of_sd_over_mean as trending_score;
+	 generate model::token as token, fraction_of_sd_over_mean as trending_score, freq, mean, sd;
+--	 generate model::token as token, fraction_of_sd_over_mean as trending_score;
 }
-positive_trending = filter trending by trending_score > 0;
-trending_sorted = order positive_trending by trending_score desc PARALLEL $para;
-top_trending = limit trending_sorted 1000 PARALLEL $para;
-store top_trending into 'data/trending/$input';
+trending_sorted = order trending by trending_score desc PARALLEL $para;
+store trending_sorted into 'data/trending/$input';
+--positive_trending = filter trending by trending_score > 0;
+--trending_sorted = order positive_trending by trending_score desc PARALLEL $para;
+--top_trending = limit trending_sorted 1000 PARALLEL $para;
+--store top_trending into 'data/trending/$input';
 
 -- now merge trending scores per token back to which documents they came from to give a trending score per document
-doc_id_token_score = join distinct_doc_ids_tokens by token, top_trending by token;
-doc_id_score = foreach doc_id_token_score generate doc_id, trending_score as score;
-doc_id_scores = group doc_id_score by doc_id;
-doc_id_total_score = foreach doc_id_scores generate group as doc_id, SUM(doc_id_score.score) as total_score;
-doc_id_total_score_sorted = order doc_id_total_score by total_score desc;
-top_doc_id_total_score = limit doc_id_total_score_sorted 100;
-store top_doc_id_total_score into 'data/trending_docs/$input';
+--doc_id_token_score = join distinct_doc_ids_tokens by token, top_trending by token;
+--doc_id_score = foreach doc_id_token_score generate doc_id, trending_score as score;
+--doc_id_scores = group doc_id_score by doc_id;
+--doc_id_total_score = foreach doc_id_scores generate group as doc_id, SUM(doc_id_score.score) as total_score;
+--doc_id_total_score_sorted = order doc_id_total_score by total_score desc;
+--top_doc_id_total_score = limit doc_id_total_score_sorted 100;
+--store top_doc_id_total_score into 'data/trending_docs/$input';
 
 -- then fold chunk into model
 model_n1__folded = foreach in_both_flat {
